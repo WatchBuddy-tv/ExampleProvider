@@ -1,4 +1,4 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from Kekik.cli import cikis_yap, hata_yakala
 from FastAPI   import HOST, PORT
@@ -24,5 +24,5 @@ if __name__ == "__main__":
     try:
         run_uvicorn()
         cikis_yap(False)
-    except Exception as hata:
-        hata_yakala(hata)
+    except Exception as error:
+        hata_yakala(error)

@@ -118,7 +118,7 @@ class AniList(PluginBase):
         rating_str = f"{rating/10:.1f}" if rating else ""
 
         # Core Object Data
-        veri = {
+        data = {
             "url"         : url,
             "title"       : meta['title']['english'] or meta['title']['romaji'],
             "poster"      : meta['coverImage']['large'],
@@ -132,7 +132,7 @@ class AniList(PluginBase):
 
         # Format detection
         if meta.get('format') == 'MOVIE':
-            return MovieInfo(**veri)
+            return MovieInfo(**data)
 
         # Build episodes for Series
         episodes = [
@@ -145,7 +145,7 @@ class AniList(PluginBase):
                 for i in range(1, (meta.get('episodes') or 1) + 1)
         ]
         
-        return SeriesInfo(**veri, episodes=episodes)
+        return SeriesInfo(**data, episodes=episodes)
 
     async def load_links(self, url: str) -> list[ExtractResult]:
         return []

@@ -1,4 +1,4 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from fastapi      import Request
 from urllib.parse import unquote, urljoin, quote
@@ -129,7 +129,7 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
     for line in lines:
         stripped = line.strip()
 
-        # URI="..." içeren satırları işle (audio/subtitle tracks, encryption keys)
+        # URI="" içeren satırları işle (audio/subtitle tracks, encryption keys)
         if 'URI="' in line:
             def replace_uri(match):
                 uri = match.group(1)
@@ -150,7 +150,7 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
                 # Segment ise doğrudan CDN
                 return f'URI="{absolute_url}"'
 
-            line = re.sub(r'URI="([^"]+)"', replace_uri, line)
+            line = re.sub(r'URI="([^\"]+)"', replace_uri, line)
             new_lines.append(line)
 
         # URL satırları (# ile başlamayan ve boş olmayan)

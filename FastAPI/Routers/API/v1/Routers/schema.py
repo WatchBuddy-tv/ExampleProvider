@@ -1,4 +1,4 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from FastAPI  import Request, PROVIDER_NAME, PROVIDER_DESCRIPTION, PROXY_URL, PROXY_FALLBACK_URL
 from .        import api_v1_router

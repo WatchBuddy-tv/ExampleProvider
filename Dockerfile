@@ -1,19 +1,19 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
-# * Docker İmajı
+# * Docker Image
 FROM python:3.13.7-slim-trixie
 
-# * Etkileşimsiz apt/locale kurulumu
+# * Non-interactive apt/locale setup
 ENV DEBIAN_FRONTEND=noninteractive
 
-# * Sadece build aşamasında güvenli bir locale kullan (C.UTF-8 hazır gelir)
+# * Use a safe locale during build (C.UTF-8 comes pre-installed)
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
-# * Çalışma Alanı
+# * Workspace
 WORKDIR /usr/src/ExampleProvider
 COPY ./ /usr/src/ExampleProvider
 
-# * Locales kurulumu ve TR locale üretimi
+# * Install locales and generate TR locale
 RUN apt-get update -y && \
     apt-get install --no-install-recommends -y \
         # git \
@@ -30,7 +30,7 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# * Standart ortam değişkenleri
+# * Standard environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING="UTF-8" \
@@ -39,14 +39,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     LANGUAGE="tr_TR:tr" \
     TZ="Europe/Istanbul"
 
-# * Gerekli Paketlerin Yüklenmesi
+# * Install dependencies
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install --no-cache-dir -U setuptools wheel && \
     python3 -m pip install --no-cache-dir -Ur requirements.txt
 
-# * Sağlık Kontrolü
+# * Health Check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -fsS http://127.0.0.1:3310/api/v1/health || exit 1
 
-# * Uygulamanın Başlatılması
+# * Start the Application
 CMD ["python3", "run.py"]

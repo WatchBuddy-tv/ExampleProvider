@@ -1,13 +1,13 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from fastapi                 import FastAPI, APIRouter, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles     import StaticFiles
 from fastapi.responses       import JSONResponse, HTMLResponse, RedirectResponse, PlainTextResponse, FileResponse, StreamingResponse
-from .Settings               import PROJE, HOST, PORT, PROVIDER_NAME, PROVIDER_DESCRIPTION, PROXY_URL, PROXY_FALLBACK_URL, PROXIES
+from .Settings               import PROJECT, HOST, PORT, PROVIDER_NAME, PROVIDER_DESCRIPTION, PROXY_URL, PROXY_FALLBACK_URL, PROXIES
 
-app = FastAPI(title=PROJE)
+app = FastAPI(title=PROJECT)
 
 # ! ----------------------------------------» Middlewares
 

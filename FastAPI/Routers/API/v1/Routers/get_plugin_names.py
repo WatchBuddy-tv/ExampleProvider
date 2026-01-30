@@ -1,4 +1,4 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from FastAPI import Request
 from .       import api_v1_router, api_v1_global_message

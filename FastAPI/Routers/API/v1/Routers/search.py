@@ -1,4 +1,4 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from FastAPI import Request, JSONResponse
 from .       import api_v1_router, api_v1_global_message
@@ -11,16 +11,16 @@ from urllib.parse import quote_plus
 async def search(request: Request, plugin: str = None, query: str = None):
     plugin_names = plugin_manager.get_plugin_names()
     if not plugin or not query:
-        return JSONResponse(status_code=410, content={"hata": f"{request.url.path}?plugin={choice(plugin_names)}&query="})
+        return JSONResponse(status_code=410, content={"error": f"{request.url.path}?plugin={choice(plugin_names)}&query="})
 
     _plugin = plugin if plugin in plugin_names else None
     if not _plugin:
-        return JSONResponse(status_code=410, content={"hata": f"{request.url.path}?plugin={_plugin or choice(plugin_names)}&query="})
+        return JSONResponse(status_code=410, content={"error": f"{request.url.path}?plugin={_plugin or choice(plugin_names)}&query="})
 
     plugin = plugin_manager.select_plugin(_plugin)
     result = await plugin.search(query)
 
-    for elem in result:
-        elem.url = quote_plus(elem.url)
+    for item in result:
+        item.url = quote_plus(item.url)
 
     return {**api_v1_global_message, "result": result}

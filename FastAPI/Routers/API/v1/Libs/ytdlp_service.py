@@ -1,4 +1,4 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from Stream import extractor_manager
 import asyncio, subprocess, json
@@ -12,13 +12,13 @@ for extractor_cls in extractor_manager.extractors:
 
 async def ytdlp_extract_video_info(url: str):
     """
-    yt-dlp ile video bilgisi çıkar
+    Extract video info with yt-dlp
 
-    YTDLP extractor'ın fast-path regex kontrolünü kullanarak
-    önce URL'nin uygunluğunu kontrol eder, ardından bilgi çıkarır.
+    Uses YTDLP extractor's fast-path regex check to
+    validate URL first, then extract info.
 
     Args:
-        url: Video URL'si
+        url: Video URL
 
     Returns:
         {
@@ -29,15 +29,15 @@ async def ytdlp_extract_video_info(url: str):
             "format": str  # "hls" | "mp4" | "webm"
         }
     """
-    # YTDLP extractor'ın optimize edilmiş can_handle_url kontrolü
+    # YTDLP extractor's optimized can_handle_url check
     if not _ytdlp_extractor.can_handle_url(url):
         return None
 
-    # URL uygunsa tam bilgiyi çıkar
+    # If URL is valid, extract full info
     return await _extract_with_ytdlp(url)
 
 async def _extract_with_ytdlp(url: str):
-    """yt-dlp ile video bilgisi çıkar (internal)"""
+    """Extract video info with yt-dlp (internal)"""
     try:
         cmd = [
             "yt-dlp",
@@ -45,7 +45,7 @@ async def _extract_with_ytdlp(url: str):
             "--no-playlist",
             "-j",  # JSON output
             "-f", "best/all",
-            "--format-sort", "proto:https",  # HTTPS (progressive) öncelikli, HLS yerine
+            "--format-sort", "proto:https",  # Prefer HTTPS (progressive) over HLS
             url
         ]
 
@@ -57,7 +57,7 @@ async def _extract_with_ytdlp(url: str):
 
         stdout, stderr = await asyncio.wait_for(
             process.communicate(),
-            timeout=30.0  # 30 saniye timeout
+            timeout=30.0  # 30 seconds timeout
         )
 
         if process.returncode != 0:
@@ -67,7 +67,7 @@ async def _extract_with_ytdlp(url: str):
         # JSON parse
         info = json.loads(stdout.decode())
 
-        # Format belirleme
+        # Determine format
         ext = info.get("ext", "mp4").lower()
         url_lower = info.get("url", "").lower()
 

@@ -1,4 +1,4 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from FastAPI        import Request, Response
 from .              import proxy_router
@@ -8,7 +8,7 @@ import httpx
 
 @proxy_router.get("/subtitle")
 async def subtitle_proxy(request: Request, url: str, referer: str = None, user_agent: str = None):
-    """Altyazı proxy endpoint'i"""
+    """Subtitle proxy endpoint"""
     try:
         decoded_url     = unquote(url)
         request_headers = prepare_request_headers(request, decoded_url, referer, user_agent)
@@ -18,7 +18,7 @@ async def subtitle_proxy(request: Request, url: str, referer: str = None, user_a
 
             if response.status_code >= 400:
                 return Response(
-                    content     = f"Altyazı hatası: {response.status_code}",
+                    content     = f"Subtitle error: {response.status_code}",
                     status_code = response.status_code
                 )
 
@@ -37,6 +37,6 @@ async def subtitle_proxy(request: Request, url: str, referer: str = None, user_a
 
     except Exception as e:
         return Response(
-            content     = f"Proxy hatası: {str(e)}",
+            content     = f"Proxy error: {str(e)}",
             status_code = 500
         )

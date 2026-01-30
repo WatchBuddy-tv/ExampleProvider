@@ -1,4 +1,4 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
 from FastAPI import Request
 from .       import api_v1_router, api_v1_global_message
@@ -8,7 +8,7 @@ from urllib.parse import quote_plus
 
 @api_v1_router.get("/get_all_plugins")
 async def get_all_plugins(request: Request):
-    """Tüm plugin detaylarını döndürür - Ana sayfa için optimize edilmiş endpoint"""
+    """Returns all plugin details - Optimized endpoint for the main page"""
     plugin_names = plugin_manager.get_plugin_names()
 
     all_plugins = []
@@ -29,7 +29,7 @@ async def get_all_plugins(request: Request):
                 "main_page"   : main_page
             })
         except Exception:
-            # Hatalı plugin'i atla
+            # Skip faulty plugin
             continue
 
     return {**api_v1_global_message, "result": all_plugins}

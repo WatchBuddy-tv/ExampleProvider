@@ -1,6 +1,6 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
-from FastAPI import Request, JSONResponse
+from FastAPI import JSONResponse
 from .       import api_v1_router, api_v1_global_message
 
 from ..Libs.ytdlp_service import ytdlp_extract_video_info
@@ -8,13 +8,13 @@ from ..Libs.ytdlp_service import ytdlp_extract_video_info
 @api_v1_router.get("/ytdlp-extract")
 async def ytdlp_extract(url: str = None):
     if not url:
-        return JSONResponse(status_code=400, content={"hata": "url parametresi gerekli"})
+        return JSONResponse(status_code=400, content={"error": "url parameter required"})
 
-    # yt-dlp ile video bilgisi çıkar
+    # Extract video info with yt-dlp
     info = await ytdlp_extract_video_info(url)
 
     if not info or not info.get("stream_url"):
-        # yt-dlp bulamadıysa, orijinal URL'i kullan
+        # If yt-dlp fails, use original URL
         return {
             **api_v1_global_message,
             "result" : {
@@ -27,7 +27,7 @@ async def ytdlp_extract(url: str = None):
             }
         }
 
-    # HTTP headers'dan user_agent ve referer çıkar
+    # Extract user_agent and referer from HTTP headers
     headers = info.get("http_headers", {})
 
     return {
