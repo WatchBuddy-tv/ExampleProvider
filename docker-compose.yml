@@ -5,15 +5,15 @@ networks:
     driver: bridge
 
 services:
-  Stream:
-    container_name : Stream
-    image          : stream:local
+  ExampleProvider:
+    container_name : ExampleProvider
+    image          : exampleprovider:local
     tty            : true
     restart        : always
     build          : .
 
     volumes:
-      - .:/usr/src/Stream
+      - .:/usr/src/ExampleProvider
     networks:
       - local
     ports:

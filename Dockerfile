@@ -10,8 +10,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 # * Çalışma Alanı
-WORKDIR /usr/src/Stream
-COPY ./ /usr/src/Stream
+WORKDIR /usr/src/ExampleProvider
+COPY ./ /usr/src/ExampleProvider
 
 # * Locales kurulumu ve TR locale üretimi
 RUN apt-get update -y && \
@@ -49,4 +49,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -fsS http://127.0.0.1:3310/api/v1/health || exit 1
 
 # * Uygulamanın Başlatılması
-CMD ["python3", "basla.py"]
+CMD ["python3", "run.py"]

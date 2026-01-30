@@ -1,6 +1,6 @@
-# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+# This tool was written by @keyiflerolsun | for @KekikAkademi
 
-name: CapRover Yükleyici
+name: CapRover Deployer
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
@@ -12,28 +12,28 @@ on:
       - master
 
 jobs:
-  CapRoverYukleyici:
+  deploy:
     name   : Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Depo
+      - name: Checkout Repository
         uses: actions/checkout@v6.0.1
         with:
           fetch-depth: 2
 
-      - name: Değişiklik
-        id  : degisiklik
+      - name: Check for Changes
+        id  : check_changes
         run : |
-          # Stream (haric dışındaki dosyalar)
-          if git diff --name-only HEAD^ | grep -vE '^haric/' | grep -qE '\.(py|txt|j2|html|css|js|json|yaml|yml)$'; then 
-            echo "stream=true" >> $GITHUB_OUTPUT
+          # Detect changes in relevant file types to trigger deployment
+          if git diff --name-only HEAD^ | grep -qE '\.(py|txt|j2|html|css|js|json|yaml|yml)$'; then 
+            echo "deploy=true" >> $GITHUB_OUTPUT
           else 
-            echo "stream=false" >> $GITHUB_OUTPUT
+            echo "deploy=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Stream TarBall
-        if  : steps.degisiklik.outputs.stream == 'true'
+      - name: Create Deploy TarBall
+        if  : steps.check_changes.outputs.deploy == 'true'
         uses: a7ul/tar-action@v1.2.0
         with:
           command: c
@@ -41,10 +41,10 @@ jobs:
           files  : ./
           outPath: deploy.tar
 
-      - name: Deploy
-        if  : steps.degisiklik.outputs.stream == 'true'
+      - name: Deploy to CapRover
+        if  : steps.check_changes.outputs.deploy == 'true'
         uses: caprover/deploy-from-github@v1.1.2
         with:
           server: ${{ secrets.SERVER }}
-          app   : ${{ secrets.STREAM_APP }}
-          token : ${{ secrets.STREAM_TOKEN }}
+          app   : ${{ secrets.PROVIDER_APP }}
+          token : ${{ secrets.PROVIDER_TOKEN }}

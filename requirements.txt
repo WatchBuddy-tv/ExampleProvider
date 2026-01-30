@@ -5,11 +5,7 @@ uvicorn
 uvloop; platform_system != "Windows"
 httptools
 gunicorn
-user_agents
 PyYAML
-Jinja2
 python-multipart
 python-dotenv
-csscompressor
-rjsmin
 KekikStream>=2.5.6
