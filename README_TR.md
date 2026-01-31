@@ -1,6 +1,7 @@
 # <img src="https://avatars.githubusercontent.com/u/254314376?s=200&v=4" height="32" align="center"> WatchBuddy Sağlayıcı Taslağı
 
 [![Durum](https://img.shields.io/badge/Durum-Beta-orange?style=flat-square)](#)
+[![example.watchbuddy.tv'yi WatchBuddy'ye Ekle](https://img.shields.io/badge/Ekle-example.watchbuddy.tv-blue?style=flat-square)](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=https://example.watchbuddy.tv)
 [![Python Versiyonu](https://img.shields.io/pypi/pyversions/KekikStream?logo=python&logoColor=white&label=Python&style=flat-square)](#)
 [![Lisans](https://img.shields.io/badge/Lisans-GPLv3-red?style=flat-square)](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE)
 
@@ -42,7 +43,7 @@ python run.py
 ```
 
 👉 **Sağlayıcı Erişimi:** `http://127.0.0.1:3310`  
-👉 **WatchBuddy Entegrasyonu:** Bu URL'yi WatchBuddy Uygulamanızdaki "Providerlar" bölümüne kopyalayın.
+👉 **WatchBuddy Entegrasyonu (Localhost):** [http://localhost:3310'u WatchBuddy'ye Ekle](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=http://localhost:3310)
 
 ### ✅ Sağlayıcıyı WatchBuddy’ye Ekleme
 1. WatchBuddy’i açın.

@@ -1,6 +1,7 @@
 # <img src="https://avatars.githubusercontent.com/u/254314376?s=200&v=4" height="32" align="center"> WatchBuddy Provider Blueprint
 
 [![Status](https://img.shields.io/badge/Status-Beta-orange?style=flat-square)](#)
+[![Add example.watchbuddy.tv to WatchBuddy](https://img.shields.io/badge/Add-example.watchbuddy.tv-blue?style=flat-square)](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=https://example.watchbuddy.tv)
 [![Python Version](https://img.shields.io/pypi/pyversions/KekikStream?logo=python&logoColor=white&label=Python&style=flat-square)](#)
 [![License](https://img.shields.io/badge/License-GPLv3-red?style=flat-square)](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE)
 
@@ -42,7 +43,7 @@ python run.py
 ```
 
 👉 **Access Provider:** `http://127.0.0.1:3310`  
-👉 **WatchBuddy Integration:** Copy this URL into the "Providers" section of your WatchBuddy App.
+👉 **WatchBuddy Integration (Localhost):** [Add http://localhost:3310 to WatchBuddy](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=http://localhost:3310)
 
 ### ✅ Add Your Provider to WatchBuddy
 1. Open WatchBuddy.
