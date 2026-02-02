@@ -1,4 +1,4 @@
-# <img src="https://avatars.githubusercontent.com/u/254314376?s=200&v=4" height="32" align="center"> WatchBuddy Sağlayıcı Taslağı
+# <img src="https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/bb/1d/47/bb1d4757-5384-a7d1-83ac-eb0d8f1b45a8/Placeholder.mill/64x64bb.png" height="32" align="center"> WatchBuddy Sağlayıcı Taslağı
 
 [![Durum](https://img.shields.io/badge/Durum-Beta-orange?style=flat-square)](#)
 [![example.watchbuddy.tv'yi WatchBuddy'ye Ekle](https://img.shields.io/badge/Ekle-example.watchbuddy.tv-blue?style=flat-square)](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=https://example.watchbuddy.tv)
