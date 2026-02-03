@@ -59,7 +59,8 @@ class ProviderValidator:
         console.print(Align.center(Panel(banner, style=f"bold {C_BRAND}", box=HEAVY_EDGE, expand=False)))
 
     def _validate_schema(self, obj, model_cls) -> tuple[bool, str]:
-        if not obj: return False, "Empty Object"
+        if not obj:
+            return False, "Empty Object"
         if not isinstance(obj, model_cls):
             return False, f"Type Mismatch: Expected {model_cls.__name__}, got {type(obj).__name__}"
         try:
@@ -120,7 +121,8 @@ class ProviderValidator:
         result = {"status": "❌", "message": "", "data": None}
         try:
             items = await plugin.search(query)
-            if not items: items = await plugin.search("The") # Fallback
+            if not items:
+                items = await plugin.search("The") # Fallback
             
             if not items:
                 return {"status": "⚠️", "message": f"Search: No results for '{query}'"}
@@ -135,12 +137,14 @@ class ProviderValidator:
         result = {"status": "❌", "message": "", "data": None}
         try:
             item = await plugin.load_item(test_url)
-            if not item: return {"status": "❌", "message": "Metadata: Empty response"}
+            if not item:
+                return {"status": "❌", "message": "Metadata: Empty response"}
             
             # Schema Check
             model_cls = SeriesInfo if isinstance(item, SeriesInfo) else MovieInfo
             valid, msg = self._validate_schema(item, model_cls)
-            if not valid: return {"status": "❌", "message": f"Schema Violation: {msg}"}
+            if not valid:
+                return {"status": "❌", "message": f"Schema Violation: {msg}"}
 
             # Metadata Visual
             grid = Table.grid(expand=False, padding=(0, 2))
@@ -207,7 +211,8 @@ class ProviderValidator:
         result = {"status": "❌", "message": "", "data": None}
         try:
             links = await plugin.load_links(test_url)
-            if not links: return {"status": "⚠️", "message": "Streams: No links found"}
+            if not links:
+                return {"status": "⚠️", "message": "Streams: No links found"}
             
             table = Table(show_header=True, header_style=f"bold {C_INFO}", box=ROUNDED, border_style=C_MUTED, expand=False)
             table.add_column("Provider", style=C_SUCCESS)
@@ -248,8 +253,10 @@ class ProviderValidator:
             console.print(f"\n [bold white]● {label}[/]")
             res = await coro
             report["steps"][key] = res["status"]
-            if res.get("data"): last_data = res["data"]
-            if res["status"] != "✅": console.print(f"   {res['status']} {res['message']}")
+            if res.get("data"):
+                last_data = res["data"]
+            if res["status"] != "✅":
+                console.print(f"   {res['status']} {res['message']}")
 
         if last_data:
             console.print(f"\n [bold white]● load_item[/]")
@@ -306,10 +313,13 @@ async def main():
     if len(sys.argv) > 1:
         targets = sys.argv[1].split(",")
         for t in targets:
-            if t in names: await validator.validate_plugin(t)
-            else: console.print(Align.center(f"[{C_ERR}]Error: Target '{t}' not found.[/]"))
+            if t in names:
+                await validator.validate_plugin(t)
+            else:
+                console.print(Align.center(f"[{C_ERR}]Error: Target '{t}' not found.[/]"))
     else:
-        for name in names: await validator.validate_plugin(name)
+        for name in names:
+            await validator.validate_plugin(name)
     
     validator.print_summary()
 
