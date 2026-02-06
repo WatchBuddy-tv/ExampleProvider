@@ -9,3 +9,4 @@ PyYAML
 python-multipart
 python-dotenv
 KekikStream>=2.5.8
+yt-dlp

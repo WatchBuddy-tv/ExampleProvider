@@ -6,6 +6,7 @@ from fastapi.responses    import StreamingResponse
 from .                    import proxy_router
 from ..Libs.helpers       import prepare_request_headers, prepare_response_headers, detect_hls_from_url, stream_wrapper, rewrite_hls_manifest, is_hls_segment, detect_hls_live, is_hls_master, extract_first_variant_url
 from ..Libs.segment_cache import segment_cache
+from FastAPI.Routers.API.v1.Libs.ytdlp_service import ytdlp_extract_video_info
 from urllib.parse         import unquote, quote
 import httpx
 
@@ -25,6 +26,23 @@ def _should_resolve_url(url: str) -> bool:
         return False
     return True
 
+async def _resolve_with_ytdlp(decoded_url: str, referer: str | None, user_agent: str | None):
+    info = await ytdlp_extract_video_info(decoded_url, user_agent=user_agent, referer=referer)
+    if not info or not info.get("stream_url"):
+        return None
+    headers = info.get("http_headers", {}) or {}
+    return {
+        "title"      : info.get("title", "Video"),
+        "stream_url" : info.get("stream_url"),
+        "duration"   : info.get("duration", 0),
+        "is_live"    : info.get("is_live", False),
+        "format"     : info.get("format", "mp4"),
+        "user_agent" : headers.get("user-agent", ""),
+        "referer"    : headers.get("referer", ""),
+        "resolved"   : True,
+        "resolved_by": "ytdlp"
+    }
+
 @proxy_router.get("/video")
 @proxy_router.head("/video")
 async def video_proxy(request: Request, url: str, referer: str = None, user_agent: str = None, force_proxy: str = None):
@@ -35,7 +53,10 @@ async def video_proxy(request: Request, url: str, referer: str = None, user_agen
     is_force_proxy  = force_proxy == "1"
 
     if _should_resolve_url(decoded_url):
-        result = None
+        try:
+            result = await _resolve_with_ytdlp(decoded_url, referer, user_agent)
+        except Exception:
+            result = None
         if result and result.get("stream_url"):
             decoded_url = result["stream_url"]
             request.state.resolved_url = decoded_url
@@ -69,7 +90,7 @@ async def video_proxy(request: Request, url: str, referer: str = None, user_agen
     if is_hls_segment(decoded_url):
         cached_content = await segment_cache.get(decoded_url)
         if cached_content:
-            # print(f"[green]✓ Cache HIT:[/green] {decoded_url[-50:]}")
+            # konsol.print(f"[green]✓ Cache HIT:[/green] {decoded_url[-50:]}")
             return Response(
                 content     = cached_content,
                 status_code = 200,
@@ -208,7 +229,7 @@ async def video_proxy(request: Request, url: str, referer: str = None, user_agen
 
             # Cache'e ekle
             await segment_cache.set(decoded_url, content)
-            # print(f"[yellow]⚡ Cache MISS:[/yellow] {decoded_url[-50:]} ({len(content) // 1024}KB)")
+            # konsol.print(f"[yellow]⚡ Cache MISS:[/yellow] {decoded_url[-50:]} ({len(content) // 1024}KB)")
 
             return Response(
                 content     = content,
