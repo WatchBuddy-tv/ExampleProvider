@@ -27,53 +27,6 @@ CORS_HEADERS = {
     "Access-Control-Allow-Headers" : "Origin, Content-Type, Accept, Range",
 }
 
-def detect_hls_live(content: bytes) -> tuple[bool, bool]:
-    """Return (is_live, has_signal). VOD-safe: only strong LIVE signals mark live."""
-    try:
-        text = content.decode("utf-8", errors="ignore").strip()
-    except Exception:
-        return (False, False)
-    if not text.startswith("#EXTM3U"):
-        return (False, False)
-    upper = text.upper()
-    if "#EXT-X-ENDLIST" in upper or "#EXT-X-PLAYLIST-TYPE:VOD" in upper:
-        return (False, True)
-    if "#EXT-X-PLAYLIST-TYPE:EVENT" in upper or "#EXT-X-PLAYLIST-TYPE:LIVE" in upper:
-        return (True, True)
-    if "#EXT-X-PROGRAM-DATE-TIME" in upper:
-        return (True, True)
-    if "#EXT-X-SERVER-CONTROL" in upper or "#EXT-X-PART" in upper or "#EXT-X-SKIP" in upper:
-        return (True, True)
-    if "#EXT-X-MEDIA-SEQUENCE" in upper:
-        return (True, True)
-
-    # Heuristic: short rolling playlist without ENDLIST
-    lines = text.splitlines()
-    segment_count = 0
-    total_duration = 0.0
-    target_duration = 0.0
-    for line in lines:
-        line = line.strip()
-        if line.startswith("#EXT-X-TARGETDURATION:"):
-            try:
-                target_duration = float(line.split(":", 1)[1].strip())
-            except Exception:
-                pass
-        if line.startswith("#EXTINF:"):
-            try:
-                val = line.split(":", 1)[1]
-                if "," in val:
-                    val = val.split(",", 1)[0]
-                total_duration += float(val.strip())
-                segment_count += 1
-            except Exception:
-                pass
-
-    if target_duration > 0 and segment_count > 0:
-        if segment_count <= 6 and total_duration <= (target_duration * 6 + 0.5):
-            return (True, True)
-
-    return (False, False)
 
 def is_hls_master(content: bytes) -> bool:
     try:
