@@ -25,20 +25,100 @@ CORS_HEADERS = {
     "Access-Control-Allow-Origin"  : "*",
     "Access-Control-Allow-Methods" : "GET, HEAD, OPTIONS",
     "Access-Control-Allow-Headers" : "Origin, Content-Type, Accept, Range",
+    "Access-Control-Expose-Headers": "X-Resolved-Url, X-Resolved-User-Agent, X-Resolved-Referer, X-Resolved-Title, X-Resolved-Format, X-Resolved-Duration, X-Resolved-Is-Live",
 }
+
+def detect_hls_live(content: bytes) -> tuple[bool, bool]:
+    """Return (is_live, has_signal). VOD-safe: only strong LIVE signals mark live."""
+    try:
+        text = content.decode("utf-8", errors="ignore").strip()
+    except Exception:
+        return (False, False)
+    if not text.startswith("#EXTM3U"):
+        return (False, False)
+    upper = text.upper()
+    if "#EXT-X-ENDLIST" in upper or "#EXT-X-PLAYLIST-TYPE:VOD" in upper:
+        return (False, True)
+    if "#EXT-X-PLAYLIST-TYPE:EVENT" in upper or "#EXT-X-PLAYLIST-TYPE:LIVE" in upper:
+        return (True, True)
+    if "#EXT-X-PROGRAM-DATE-TIME" in upper:
+        return (True, True)
+    if "#EXT-X-SERVER-CONTROL" in upper or "#EXT-X-PART" in upper or "#EXT-X-SKIP" in upper:
+        return (True, True)
+    if "#EXT-X-MEDIA-SEQUENCE" in upper:
+        return (True, True)
+
+    # Heuristic: short rolling playlist without ENDLIST
+    lines = text.splitlines()
+    segment_count = 0
+    total_duration = 0.0
+    target_duration = 0.0
+    for line in lines:
+        line = line.strip()
+        if line.startswith("#EXT-X-TARGETDURATION:"):
+            try:
+                target_duration = float(line.split(":", 1)[1].strip())
+            except Exception:
+                pass
+        if line.startswith("#EXTINF:"):
+            try:
+                val = line.split(":", 1)[1]
+                if "," in val:
+                    val = val.split(",", 1)[0]
+                total_duration += float(val.strip())
+                segment_count += 1
+            except Exception:
+                pass
+
+    if target_duration > 0 and segment_count > 0:
+        if segment_count <= 6 and total_duration <= (target_duration * 6 + 0.5):
+            return (True, True)
+
+    return (False, False)
+
+def is_hls_master(content: bytes) -> bool:
+    try:
+        text = content.decode("utf-8", errors="ignore").strip()
+    except Exception:
+        return False
+    if not text.startswith("#EXTM3U"):
+        return False
+    return "#EXT-X-STREAM-INF" in text.upper()
+
+def extract_first_variant_url(base_url: str, content: bytes) -> str | None:
+    try:
+        text = content.decode("utf-8", errors="ignore").strip()
+    except Exception:
+        return None
+    if not text.startswith("#EXTM3U"):
+        return None
+    lines = text.splitlines()
+    expect_url = False
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("#EXT-X-STREAM-INF"):
+            expect_url = True
+            continue
+        if line.startswith("#"):
+            continue
+        if expect_url:
+            return urljoin(base_url, line)
+    return None
 
 def get_content_type(url: str, response_headers: dict) -> str:
     """URL ve response headers'dan content-type belirle"""
     # 1. Response header kontrolü
     if ct := response_headers.get("content-type"):
         return ct
-
+    
     # 2. URL uzantısı kontrolü
     url_lower = url.lower()
     for ext, ct in CONTENT_TYPES.items():
         if ext in url_lower:
             return ct
-
+            
     # 3. Varsayılan
     return "video/mp4"
 
@@ -109,7 +189,7 @@ def is_hls_segment(url: str) -> bool:
 def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, user_agent: str = None, force_proxy: bool = False) -> bytes:
     """
     HLS manifest içindeki göreceli URL'leri işler.
-
+    
     BANT GENİŞLİĞİ OPTİMİZASYONU:
     - Manifest dosyaları (.m3u8) -> Proxy üzerinden (CORS + header injection için)
     - Video segmentleri (.ts, .m4s) -> Doğrudan CDN'den (bant genişliği tasarrufu)
@@ -129,12 +209,12 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
     for line in lines:
         stripped = line.strip()
 
-        # URI="" içeren satırları işle (audio/subtitle tracks, encryption keys)
+        # URI="..." içeren satırları işle (audio/subtitle tracks, encryption keys)
         if 'URI="' in line:
             def replace_uri(match):
                 uri = match.group(1)
                 absolute_url = urljoin(base_url, uri)
-
+                
                 # Eğer bir segment DEĞİLSE (key veya alt manifest ise) proxy üzerinden geçmeli
                 # VEYA force_proxy aktif ise her şey proxy üzerinden geçmeli
                 if force_proxy or not is_hls_segment(absolute_url):
@@ -146,7 +226,7 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
                     if force_proxy:
                         proxy_url += '&force_proxy=1'
                     return f'URI="{proxy_url}"'
-
+                
                 # Segment ise doğrudan CDN
                 return f'URI="{absolute_url}"'
 
@@ -156,7 +236,7 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
         # URL satırları (# ile başlamayan ve boş olmayan)
         elif stripped and not stripped.startswith('#'):
             absolute_url = urljoin(base_url, stripped)
-
+            
             # Segment ise doğrudan CDN (Bant Genişliği Tasarrufu)
             if not force_proxy and is_hls_segment(absolute_url):
                 new_lines.append(absolute_url)
@@ -195,7 +275,7 @@ async def stream_wrapper(response: httpx.Response):
                     pass
 
             yield chunk
-
+            
     except GeneratorExit:
         pass
     except Exception as e:
@@ -220,9 +300,9 @@ def process_subtitle_content(content: bytes, content_type: str, url: str) -> byt
 
     # 3. SRT -> VTT Dönüşümü
     is_srt = (
-        content_type == "application/x-subrip" or
-        url.endswith(".srt") or
-        content.strip().startswith(b"1\r\n") or
+        content_type == "application/x-subrip" or 
+        url.endswith(".srt") or 
+        content.strip().startswith(b"1\r\n") or 
         content.strip().startswith(b"1\n")
     )
 
