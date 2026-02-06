@@ -123,8 +123,21 @@ def prepare_response_headers(response_headers: dict, url: str, detected_content_
 
 def detect_hls_from_url(url: str) -> bool:
     """URL yapısından HLS olup olmadığını tahmin eder"""
-    indicators = (".m3u8", "/m.php", "/l.php", "/ld.php", "master.txt", "embed/sheila")
-    return any(x in url for x in indicators)
+    url_lower = url.lower()
+    indicators = (
+        ".m3u8",
+        ".m3u",
+        "/hls/",
+        "/m3u8/",
+        "master.txt",
+        "/manifests/",
+        "playlist.m3u8",
+        "/m.php",
+        "/l.php",
+        "/ld.php",
+        "embed/sheila"
+    )
+    return any(x in url_lower for x in indicators)
 
 def is_hls_segment(url: str) -> bool:
     """URL'nin HLS segment'i olup olmadığını kontrol et"""
@@ -182,7 +195,7 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
                 # Segment ise doğrudan CDN
                 return f'URI="{absolute_url}"'
 
-            line = re.sub(r'URI="([^\"]+)"', replace_uri, line)
+            line = re.sub(r'URI="([^"]+)"', replace_uri, line)
             new_lines.append(line)
 
         # URL satırları (# ile başlamayan ve boş olmayan)
@@ -240,6 +253,7 @@ async def stream_wrapper(response: httpx.Response):
 def process_subtitle_content(content: bytes, content_type: str, url: str) -> bytes:
     """Altyazı içeriğini işler ve VTT formatına çevirir"""
     def _normalize_vtt_timestamps(text: str) -> str:
+        # Only replace comma in timestamps (HH:MM:SS,mmm -> HH:MM:SS.mmm)
         return re.sub(r"(\d{2}:\d{2}:\d{2}),(\d{3})", r"\1.\2", text)
 
     # 1. UTF-8 BOM temizliği
