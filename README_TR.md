@@ -84,28 +84,35 @@ Gereksinimler:
 Yeni bir eklenti oluşturmak, `Stream/Plugins/` dizinine bir Python dosyası eklemek kadar basittir. İşte temel bir taslak:
 
 ```python
-from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo
+from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult
 
-class MyAwesomeProvider(PluginBase):
-    name        = "Eklenti Adı"
+class MyPlugin(PluginBase):
+    name        = "MyPlugin"
+    language    = "tr"
     main_url    = "https://example.com"
-    description = "Eklenti hakkında kısa açıklama."
+    favicon     = f"https://www.google.com/s2/favicons?domain={main_url}&sz=64"
+    description = "MyPlugin description"
 
-    async def get_main_page(self, page, url, category) -> list[MainPageResult]:
+    # Ana Sayfadaki Kategorilerin Listesi
+    main_page   = {
+      f"{main_url}/category/" : "Category Name"
+    }
+
+    async def get_main_page(self, page: int, url: str, category: str) -> list[MainPageResult]:
         # Web sitesini tara ve MainPageResult listesi dön
-        pass
+        return results
 
-    async def search(self, query) -> list[SearchResult]:
+    async def search(self, query: str) -> list[SearchResult]:
         # Arama yap ve SearchResult listesi dön
-        pass
+        return results
 
-    async def load_item(self, url) -> MovieInfo:
+    async def load_item(self, url: str) -> MovieInfo | SeriesInfo:
         # Film veya Dizi bilgisini (MovieInfo/SeriesInfo) dön
-        pass
+        return details
 
-    async def load_links(self, url) -> list:
+    async def load_links(self, url: str) -> list[ExtractResult]:
         # Oynatılabilir linkleri çöz ve ExtractResult listesi dön
-        pass
+        return links
 ```
 
 ### 2. Eklentilerinizi Test Etme

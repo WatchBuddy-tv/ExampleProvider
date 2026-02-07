@@ -84,28 +84,35 @@ Requirements:
 Creating a new plugin is as simple as adding a Python file to `Stream/Plugins/`. Here is a minimal boilerplate:
 
 ```python
-from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo
+from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult
 
-class MyAwesomeProvider(PluginBase):
-    name        = "My Provider"
+class MyPlugin(PluginBase):
+    name        = "MyPlugin"
+    language    = "en"
     main_url    = "https://example.com"
-    description = "Short description of the provider."
+    favicon     = f"https://www.google.com/s2/favicons?domain={main_url}&sz=64"
+    description = "MyPlugin description"
 
-    async def get_main_page(self, page, url, category) -> list[MainPageResult]:
+    # Categories List on Main Page
+    main_page   = {
+      f"{main_url}/category/" : "Category Name"
+    }
+
+    async def get_main_page(self, page: int, url: str, category: str) -> list[MainPageResult]:
         # Scrape and return list of MainPageResult
-        pass
+        return results
 
-    async def search(self, query) -> list[SearchResult]:
+    async def search(self, query: str) -> list[SearchResult]:
         # Return list of SearchResult
-        pass
+        return results
 
-    async def load_item(self, url) -> MovieInfo:
+    async def load_item(self, url: str) -> MovieInfo | SeriesInfo:
         # Return MovieInfo or SeriesInfo
-        pass
+        return details
 
-    async def load_links(self, url) -> list:
+    async def load_links(self, url: str) -> list[ExtractResult]:
         # Resolve playable links
-        pass
+        return links
 ```
 
 ### 2. Testing your Plugins
