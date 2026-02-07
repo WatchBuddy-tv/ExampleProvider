@@ -5,7 +5,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/KekikStream?logo=python&logoColor=white&label=Python&style=flat-square)](#)
 [![License](https://img.shields.io/badge/License-GPLv3-red?style=flat-square)](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE)
 
-**Official SDK and Boilerplate for WatchBuddy Content Providers**  
+**Official SDK and Boilerplate for WatchBuddy Content Providers**
 Build decentralized scrapers, test them in isolation, and integrate seamlessly with the WatchBuddy ecosystem. 🚀
 
 [🇹🇷 Türkçe dokümantasyon (README_TR.md)](./README_TR.md)
@@ -42,7 +42,7 @@ cp .env.example .env
 python run.py
 ```
 
-👉 **Access Provider:** `http://127.0.0.1:3310`  
+👉 **Access Provider:** `http://127.0.0.1:3310`
 👉 **WatchBuddy Integration (Localhost):** [Add http://localhost:3310 to WatchBuddy](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=http://localhost:3310)
 
 ### ✅ Add Your Provider to WatchBuddy
@@ -150,7 +150,7 @@ graph TB
     subgraph Provider[🎬 Your Provider]
         FastAPI[⚡ FastAPI Entry]
         Loader[🔌 Loader Core]
-        
+
         subgraph LocalCode[Local Development]
             P1[📺 RareFilmm Plugin]
             E1[🔗 Custom Extractor]
@@ -178,7 +178,7 @@ graph TB
 
 ## 🌐 Copyright & License
 
-*Copyright (C) 2026 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️  
+*Copyright (C) 2026 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️
 Licensed under [GNU GENERAL PUBLIC LICENSE Version 3](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE).
 
 ---

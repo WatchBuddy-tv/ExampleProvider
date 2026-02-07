@@ -144,7 +144,7 @@ class AniList(PluginBase):
             )
                 for i in range(1, (meta.get('episodes') or 1) + 1)
         ]
-        
+
         return SeriesInfo(**data, episodes=episodes)
 
     async def load_links(self, url: str) -> list[ExtractResult]:

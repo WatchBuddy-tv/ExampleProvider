@@ -5,7 +5,7 @@
 [![Python Versiyonu](https://img.shields.io/pypi/pyversions/KekikStream?logo=python&logoColor=white&label=Python&style=flat-square)](#)
 [![Lisans](https://img.shields.io/badge/Lisans-GPLv3-red?style=flat-square)](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE)
 
-**WatchBuddy İçerik Sağlayıcıları için Resmi SDK ve Başlangıç Paketi**  
+**WatchBuddy İçerik Sağlayıcıları için Resmi SDK ve Başlangıç Paketi**
 Merkeziyetsiz tarayıcılar oluşturun, izole ortamda test edin ve WatchBuddy ekosistemine sorunsuz entegre olun. 🚀
 
 [English documentation available here](./README.md)
@@ -42,7 +42,7 @@ cp .env.example .env
 python run.py
 ```
 
-👉 **Sağlayıcı Erişimi:** `http://127.0.0.1:3310`  
+👉 **Sağlayıcı Erişimi:** `http://127.0.0.1:3310`
 👉 **WatchBuddy Entegrasyonu (Localhost):** [http://localhost:3310'u WatchBuddy'ye Ekle](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=http://localhost:3310)
 
 ### ✅ Sağlayıcıyı WatchBuddy’ye Ekleme
@@ -150,7 +150,7 @@ graph TB
     subgraph Provider[🎬 Sağlayıcınız]
         FastAPI[⚡ FastAPI Girişi]
         Loader[🔌 Yükleyici Çekirdeği]
-        
+
         subgraph LocalCode[Yerel Kodlar]
             P1[📺 RareFilmm Plugin]
             E1[🔗 Özel Extractor]
@@ -178,7 +178,7 @@ graph TB
 
 ## 🌐 Telif Hakkı ve Lisans
 
-*Copyright (C) 2026 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️  
+*Copyright (C) 2026 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️
 [GNU GENERAL PUBLIC LICENSE Version 3](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE) koşullarıyla lisanslanmıştır.
 
 ---

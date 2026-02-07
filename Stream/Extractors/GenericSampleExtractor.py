@@ -20,7 +20,7 @@ class GenericSampleExtractor(ExtractorBase):
         # 1. Initialize session with the specified host
         # Base headers and cookies from CloudScraper are pre-loaded in self.httpx
         response = await self.httpx.get(
-            url     = url, 
+            url     = url,
             headers = {"Referer": referer or self.main_url}
         )
         html = response.text
@@ -29,7 +29,7 @@ class GenericSampleExtractor(ExtractorBase):
         # Generic regex to capture common manifest patterns (m3u8, mp4, etc.)
         stream_pattern = r'["\'](https?://[^"\']+\.(?:m3u8|mp4|webm|mkv)(?:\?[^"\']+)?)["\']'
         match          = re.search(stream_pattern, html)
-        
+
         if not match:
             # Handle obfuscated or protected links (e.g., Base64, AES, Packer)
             raise ValueError(f"Stream resolution failed for source: {url}")
