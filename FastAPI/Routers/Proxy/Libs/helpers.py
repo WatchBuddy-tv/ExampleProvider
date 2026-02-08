@@ -28,37 +28,6 @@ CORS_HEADERS = {
 }
 
 
-def is_hls_master(content: bytes) -> bool:
-    try:
-        text = content.decode("utf-8", errors="ignore").strip()
-    except Exception:
-        return False
-    if not text.startswith("#EXTM3U"):
-        return False
-    return "#EXT-X-STREAM-INF" in text.upper()
-
-def extract_first_variant_url(base_url: str, content: bytes) -> str | None:
-    try:
-        text = content.decode("utf-8", errors="ignore").strip()
-    except Exception:
-        return None
-    if not text.startswith("#EXTM3U"):
-        return None
-    lines = text.splitlines()
-    expect_url = False
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        if line.startswith("#EXT-X-STREAM-INF"):
-            expect_url = True
-            continue
-        if line.startswith("#"):
-            continue
-        if expect_url:
-            return urljoin(base_url, line)
-    return None
-
 def get_content_type(url: str, response_headers: dict) -> str:
     """URL ve response headers'dan content-type belirle"""
     # 1. Response header kontrolü
@@ -94,6 +63,11 @@ def prepare_request_headers(request: Request, url: str, referer: str | None, use
 
     if referer and referer != "None":
         headers["referer"] = unquote(referer)
+
+    # Client'tan gelen Range header'ı aktar (MP4 seek/byte-range desteği, goProxy parity)
+    range_header = request.headers.get("range")
+    if range_header:
+        headers["Range"] = range_header
 
     return headers
 
@@ -147,8 +121,8 @@ def is_hls_segment(url: str) -> bool:
     if ".m3u8" in url_lower:
         return False
 
-    # Segment göstergeleri
-    segment_indicators = (".ts", ".m4s", ".mp4", ".aac", "seg-", "chunk-", "fragment", ".png", ".jpg", ".jpeg")
+    # Segment göstergeleri (standalone .mp4 hariç — tam dosya belleğe okunmasın, goProxy parity)
+    segment_indicators = (".ts", ".m4s", ".aac", "seg-", "chunk-", "fragment", ".png", ".jpg", ".jpeg")
     return any(indicator in url_lower for indicator in segment_indicators)
 
 def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, user_agent: str = None, force_proxy: bool = False) -> bytes:
@@ -239,6 +213,10 @@ async def stream_wrapper(response: httpx.Response):
                 except:
                     pass
 
+                # # HTML uyarısı
+                # if 'text/html' in original_ct.lower() and not corrected_ct:
+                #     konsol.print(f"[red]⚠️  UYARI: Kaynak HTML döndürüyor![/red]")
+
             yield chunk
 
     except GeneratorExit:
@@ -286,7 +264,7 @@ def process_subtitle_content(content: bytes, content_type: str, url: str) -> byt
         try:
             content = content.replace(b"\r\n", b"\n")
             text = content.decode("utf-8", errors="ignore")
-            text = text.replace(",", ".") # Zaman formatı düzeltmesi
+            text = re.sub(r'(\d{2}:\d{2}:\d{2}),(\d{3})', r'\1.\2', text)  # Sadece timestamp virgülü
             if not text.startswith("WEBVTT"):
                 text = "WEBVTT\n\n" + text
             return text.encode("utf-8")
