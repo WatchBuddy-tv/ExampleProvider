@@ -42,7 +42,7 @@ cp .env.example .env
 python run.py
 ```
 
-👉 **Acces fournisseur:** `http://127.0.0.1:3310`  
+👉 **Acces fournisseur:** `http://127.0.0.1:3310`
 👉 **Integration WatchBuddy (localhost):** [Ajouter http://localhost:3310 a WatchBuddy](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=http://localhost:3310)
 
 ### ✅ Ajouter votre fournisseur a WatchBuddy
@@ -84,7 +84,7 @@ Exigences:
 Creer un plugin revient a ajouter un fichier Python dans `Stream/Plugins/`. Exemple minimal:
 
 ```python
-from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult
+from KekikStream.Core import HTMLHelper, PluginBase, MainPageResult, SearchResult, MovieInfo, Episode, SeriesInfo, Subtitle, ExtractResult
 
 class MyPlugin(PluginBase):
     name        = "MyPlugin"
@@ -111,7 +111,10 @@ class MyPlugin(PluginBase):
         return details
 
     async def load_links(self, url: str) -> list[ExtractResult]:
-        # Resoudre les liens lisibles
+        # self.collect_results(results, data)  — collecter les resultats (list/single/None)
+        # self.deduplicate(results)             — deduplication par URL
+        # await self.async_cf_get(url)          — bypass Cloudflare (async)
+        # Le moteur appelle sync_subtitles(results) automatiquement apres load_links
         return links
 ```
 
@@ -185,7 +188,7 @@ graph TB
 
 ## 🌐 Copyright et licence
 
-*Copyright (C) 2026 par* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️  
+*Copyright (C) 2026 par* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️
 Distribue sous [GNU GENERAL PUBLIC LICENSE Version 3](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE).
 
 ---

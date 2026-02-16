@@ -84,7 +84,7 @@ Requirements:
 Creating a new plugin is as simple as adding a Python file to `Stream/Plugins/`. Here is a minimal boilerplate:
 
 ```python
-from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult
+from KekikStream.Core import HTMLHelper, PluginBase, MainPageResult, SearchResult, MovieInfo, Episode, SeriesInfo, Subtitle, ExtractResult
 
 class MyPlugin(PluginBase):
     name        = "MyPlugin"
@@ -111,7 +111,10 @@ class MyPlugin(PluginBase):
         return details
 
     async def load_links(self, url: str) -> list[ExtractResult]:
-        # Resolve playable links
+        # self.collect_results(results, data)  — collect extract results (handles list/single/None)
+        # self.deduplicate(results)             — URL-based deduplication
+        # await self.async_cf_get(url)          — Cloudflare bypass (async)
+        # Engine auto-calls sync_subtitles(results) after load_links
         return links
 ```
 

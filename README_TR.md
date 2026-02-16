@@ -84,7 +84,7 @@ Gereksinimler:
 Yeni bir eklenti oluşturmak, `Stream/Plugins/` dizinine bir Python dosyası eklemek kadar basittir. İşte temel bir taslak:
 
 ```python
-from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult
+from KekikStream.Core import HTMLHelper, PluginBase, MainPageResult, SearchResult, MovieInfo, Episode, SeriesInfo, Subtitle, ExtractResult
 
 class MyPlugin(PluginBase):
     name        = "MyPlugin"
@@ -111,7 +111,10 @@ class MyPlugin(PluginBase):
         return details
 
     async def load_links(self, url: str) -> list[ExtractResult]:
-        # Oynatılabilir linkleri çöz ve ExtractResult listesi dön
+        # self.collect_results(results, data)  — extract sonuçlarını topla (list/tekil/None)
+        # self.deduplicate(results)             — URL bazlı tekrar kaldırma
+        # await self.async_cf_get(url)          — Cloudflare bypass (async)
+        # Engine load_links sonrası otomatik sync_subtitles çalıştırır
         return links
 ```
 

@@ -5,7 +5,7 @@
 [![Версия Python](https://img.shields.io/pypi/pyversions/KekikStream?logo=python&logoColor=white&label=Python&style=flat-square)](#)
 [![Лицензия](https://img.shields.io/badge/License-GPLv3-red?style=flat-square)](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE)
 
-**Официальный SDK и boilerplate для контент-провайдеров WatchBuddy**  
+**Официальный SDK и boilerplate для контент-провайдеров WatchBuddy**
 Создавайте децентрализованные скрейперы, тестируйте их изолированно и без лишних шагов интегрируйте в экосистему WatchBuddy. 🚀
 
 [🇺🇸 English](./README.md) • [🇹🇷 Türkçe](./README_TR.md) • [🇫🇷 Français](./README_FR.md) • [🇺🇦 Українська](./README_UK.md)
@@ -14,7 +14,7 @@
 
 ## 🚦 Обзор
 
-Этот шаблон дает стандартизированную среду для разработки **провайдеров WatchBuddy**.  
+Этот шаблон дает стандартизированную среду для разработки **провайдеров WatchBuddy**.
 Провайдер — это отдельный сервис, который поставляет контент в WatchBuddy (Web/Mobile) через децентрализованную сеть.
 
 - 🔌 **Plug & Play**: добавьте URL провайдера в WatchBuddy и сразу начинайте смотреть.
@@ -43,7 +43,7 @@ cp .env.example .env
 python run.py
 ```
 
-👉 **Доступ к провайдеру:** `http://127.0.0.1:3310`  
+👉 **Доступ к провайдеру:** `http://127.0.0.1:3310`
 👉 **Интеграция с WatchBuddy (localhost):** [Добавить http://localhost:3310 в WatchBuddy](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=http://localhost:3310)
 
 ### ✅ Как добавить провайдера в WatchBuddy
@@ -85,7 +85,7 @@ python run.py
 Создать новый плагин просто: добавьте Python-файл в `Stream/Plugins/`. Минимальный пример:
 
 ```python
-from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult
+from KekikStream.Core import HTMLHelper, PluginBase, MainPageResult, SearchResult, MovieInfo, Episode, SeriesInfo, Subtitle, ExtractResult
 
 class MyPlugin(PluginBase):
     name        = "MyPlugin"
@@ -112,7 +112,10 @@ class MyPlugin(PluginBase):
         return details
 
     async def load_links(self, url: str) -> list[ExtractResult]:
-        # Разрешите воспроизводимые ссылки
+        # self.collect_results(results, data)  — сбор результатов (list/single/None)
+        # self.deduplicate(results)             — дедупликация по URL
+        # await self.async_cf_get(url)          — обход Cloudflare (async)
+        # Движок автоматически вызывает sync_subtitles(results) после load_links
         return links
 ```
 
@@ -186,7 +189,7 @@ graph TB
 
 ## 🌐 Авторские права и лицензия
 
-*Copyright (C) 2026 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️  
+*Copyright (C) 2026 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️
 Лицензия: [GNU GENERAL PUBLIC LICENSE Version 3](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE).
 
 ---

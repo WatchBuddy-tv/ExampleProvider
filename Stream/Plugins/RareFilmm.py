@@ -70,10 +70,10 @@ class RareFilmm(PluginBase):
 
         results  = []
         for item in helper.select("div.post"):
-            title  = helper.select_text("h2 a", item)
-            href   = helper.select_attr("h2 a", "href", item)
+            title  = item.select_text("h2 a")
+            href   = item.select_attr("h2 a", "href")
 
-            poster_style = helper.select_attr("div.featured-image", "style") or ""
+            poster_style = item.select_attr("div.featured-image", "style") or ""
             poster_match = helper.regex_first(r"url\((.*?)\)", poster_style)
             poster       = poster_match.strip("'").strip('"') if poster_match else None
 
@@ -96,10 +96,10 @@ class RareFilmm(PluginBase):
 
         results  = []
         for item in helper.select("div.post"):
-            title  = helper.select_text("h2 a", item)
-            href   = helper.select_attr("h2 a", "href", item)
+            title  = item.select_text("h2 a")
+            href   = item.select_attr("h2 a", "href")
 
-            poster_style = helper.select_attr("div.featured-image", "style") or ""
+            poster_style = item.select_attr("div.featured-image", "style") or ""
             poster_match = helper.regex_first(r"url\((.*?)\)", poster_style)
             poster       = poster_match.strip("'").strip('"') if poster_match else None
 
@@ -164,8 +164,8 @@ class RareFilmm(PluginBase):
         # 2. Alternative Sources (Download Options)
         # Extract links from 'a' tags that contain 'DL via' or similar patterns
         for link_el in helper.select("article a"):
-            href = helper.select_attr(None, "href", link_el)
-            text = helper.select_text(None, link_el)
+            href = link_el.select_attr(None, "href")
+            text = link_el.select_text()
 
             if not href or not any(x in text for x in ["DL via", "Download"]):
                 continue

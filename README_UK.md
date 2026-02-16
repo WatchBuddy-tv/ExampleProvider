@@ -5,7 +5,7 @@
 [![Версія Python](https://img.shields.io/pypi/pyversions/KekikStream?logo=python&logoColor=white&label=Python&style=flat-square)](#)
 [![Ліцензія](https://img.shields.io/badge/License-GPLv3-red?style=flat-square)](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE)
 
-**Офіційний SDK і boilerplate для контент-провайдерів WatchBuddy**  
+**Офіційний SDK і boilerplate для контент-провайдерів WatchBuddy**
 Створюйте децентралізовані скрейпери, тестуйте їх ізольовано та без зайвих кроків інтегруйте в екосистему WatchBuddy. 🚀
 
 [🇺🇸 English](./README.md) • [🇹🇷 Türkçe](./README_TR.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md)
@@ -14,7 +14,7 @@
 
 ## 🚦 Огляд
 
-Цей шаблон надає стандартизоване середовище для розробки **провайдерів WatchBuddy**.  
+Цей шаблон надає стандартизоване середовище для розробки **провайдерів WatchBuddy**.
 Провайдер — це окремий сервіс, який постачає контент у WatchBuddy (Web/Mobile) через децентралізовану мережу.
 
 - 🔌 **Plug & Play**: додайте URL свого провайдера у WatchBuddy і відразу починайте перегляд.
@@ -43,7 +43,7 @@ cp .env.example .env
 python run.py
 ```
 
-👉 **Доступ до провайдера:** `http://127.0.0.1:3310`  
+👉 **Доступ до провайдера:** `http://127.0.0.1:3310`
 👉 **Інтеграція з WatchBuddy (localhost):** [Додати http://localhost:3310 у WatchBuddy](https://keyiflerolsun.tr/http-protocol-redirector/?r=watchbuddy://provider?url=http://localhost:3310)
 
 ### ✅ Як додати провайдер у WatchBuddy
@@ -85,7 +85,7 @@ python run.py
 Новий плагін створюється просто: додайте Python-файл у `Stream/Plugins/`. Мінімальний приклад:
 
 ```python
-from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult
+from KekikStream.Core import HTMLHelper, PluginBase, MainPageResult, SearchResult, MovieInfo, Episode, SeriesInfo, Subtitle, ExtractResult
 
 class MyPlugin(PluginBase):
     name        = "MyPlugin"
@@ -112,7 +112,10 @@ class MyPlugin(PluginBase):
         return details
 
     async def load_links(self, url: str) -> list[ExtractResult]:
-        # Розв'яжіть відтворювані посилання
+        # self.collect_results(results, data)  — збір результатів (list/single/None)
+        # self.deduplicate(results)             — дедуплікація за URL
+        # await self.async_cf_get(url)          — обхід Cloudflare (async)
+        # Двигун автоматично викликає sync_subtitles(results) після load_links
         return links
 ```
 
@@ -186,7 +189,7 @@ graph TB
 
 ## 🌐 Авторські права та ліцензія
 
-*Copyright (C) 2026 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️  
+*Copyright (C) 2026 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️
 Ліцензія: [GNU GENERAL PUBLIC LICENSE Version 3](https://github.com/keyiflerolsun/KekikStream/blob/master/LICENSE).
 
 ---
