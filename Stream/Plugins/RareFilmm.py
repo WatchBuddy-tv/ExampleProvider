@@ -80,7 +80,7 @@ class RareFilmm(PluginBase):
             if title and href:
                 results.append(MainPageResult(
                     category = category,
-                    title    = self.clean_title(title),
+                    title    = title,
                     url      = self.fix_url(href),
                     poster   = self.fix_url(poster)
                 ))
@@ -105,7 +105,7 @@ class RareFilmm(PluginBase):
 
             if title and href:
                 results.append(SearchResult(
-                    title  = self.clean_title(title),
+                    title  = title,
                     url    = self.fix_url(href),
                     poster = self.fix_url(poster)
                 ))
@@ -134,7 +134,7 @@ class RareFilmm(PluginBase):
 
         return MovieInfo(
             url         = url,
-            title       = self.clean_title(title),
+            title       = title,
             poster      = self.fix_url(poster),
             description = description,
             tags        = tags,
