@@ -1,4 +1,4 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from Stream import extractor_manager
 import asyncio, subprocess, json, time, os
@@ -10,12 +10,12 @@ for extractor_cls in extractor_manager.extractors:
         _ytdlp_extractor = instance
         break
 
-_CACHE: dict[str, dict] = {}
-_CACHE_TS: dict[str, float] = {}
-_NEG_CACHE_TS: dict[str, float] = {}
-_CACHE_LOCK = asyncio.Lock()
-_CACHE_TTL = int(os.getenv("YTDLP_CACHE_TTL", "600") or "600")
-_NEG_TTL = int(os.getenv("YTDLP_NEG_TTL", "60") or "60")
+_CACHE        : dict[str, dict]  = {}
+_CACHE_TS     : dict[str, float] = {}
+_NEG_CACHE_TS : dict[str, float] = {}
+_CACHE_LOCK                      = asyncio.Lock()
+_CACHE_TTL                       = int(os.getenv("YTDLP_CACHE_TTL", "600") or "600")
+_NEG_TTL                         = int(os.getenv("YTDLP_NEG_TTL", "60") or "60")
 
 async def ytdlp_extract_video_info(url: str, user_agent: str | None = None, referer: str | None = None):
     """
@@ -29,11 +29,11 @@ async def ytdlp_extract_video_info(url: str, user_agent: str | None = None, refe
 
     Returns:
         {
-            "title": str,
-            "stream_url": str,
-            "duration": float,
-            "thumbnail": str,
-            "format": str  # "hls" | "mp4" | "webm"
+            "title"      : str,
+            "stream_url" : str,
+            "duration"   : float,
+            "thumbnail"  : str,
+            "format"     : str  # "hls" | "mp4" | "webm"
         }
     """
     if not url or not (url.startswith("http://") or url.startswith("https://")):
@@ -44,7 +44,7 @@ async def ytdlp_extract_video_info(url: str, user_agent: str | None = None, refe
         return None
 
     cache_key = f"{url}|{user_agent or ''}|{referer or ''}"
-    now = time.time()
+    now       = time.time()
     async with _CACHE_LOCK:
         ts = _CACHE_TS.get(cache_key)
         if ts and (now - ts) < _CACHE_TTL:
@@ -84,8 +84,8 @@ async def _extract_with_ytdlp(url: str, user_agent: str | None = None, referer: 
 
         process = await asyncio.create_subprocess_exec(
             *cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE
         )
 
         timeout_s = float(os.getenv("YTDLP_TIMEOUT", "25") or "25")
@@ -102,7 +102,7 @@ async def _extract_with_ytdlp(url: str, user_agent: str | None = None, referer: 
         info = json.loads(stdout.decode())
 
         # Determine format
-        ext = info.get("ext", "mp4").lower()
+        ext       = info.get("ext", "mp4").lower()
         url_lower = info.get("url", "").lower()
 
         if "m3u8" in url_lower or info.get("protocol") == "m3u8_native":

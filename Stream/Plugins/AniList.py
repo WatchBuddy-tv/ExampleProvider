@@ -1,4 +1,4 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from KekikStream.Core import PluginBase, MainPageResult, SearchResult, Episode, MovieInfo, SeriesInfo, ExtractResult
 import re
@@ -15,12 +15,12 @@ class AniList(PluginBase):
 
     # Expanded Main Page Categories
     main_page = {
-        "TRENDING_DESC"  : "Trending Now",
-        "POPULAR_DESC"   : "Popular This Season",
-        "SCORE_DESC"     : "Top Rated All Time",
-        "FAVOURITES_DESC": "Most Favorited",
-        "START_DATE_DESC": "New Releases",
-        "UPDATED_AT_DESC": "Recently Updated"
+        "TRENDING_DESC"   : "Trending Now",
+        "POPULAR_DESC"    : "Popular This Season",
+        "SCORE_DESC"      : "Top Rated All Time",
+        "FAVOURITES_DESC" : "Most Favorited",
+        "START_DATE_DESC" : "New Releases",
+        "UPDATED_AT_DESC" : "Recently Updated"
     }
 
     async def _query(self, query: str, variables: dict) -> dict:
@@ -114,7 +114,7 @@ class AniList(PluginBase):
         desc = re.sub('<[^<]+?>', '', meta.get('description', '')) if meta.get('description') else ''
 
         # Rating Scaling (AniList 100 -> WatchBuddy 10.0)
-        rating = meta.get('averageScore')
+        rating     = meta.get('averageScore')
         rating_str = f"{rating/10:.1f}" if rating else ""
 
         # Core Object Data

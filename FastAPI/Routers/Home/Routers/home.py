@@ -1,4 +1,4 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from FastAPI import JSONResponse
 from .       import home_router

@@ -1,11 +1,11 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from Kekik.cli import cikis_yap, hata_yakala
 from FastAPI   import HOST, PORT
 import uvicorn, subprocess
 
 def run_uvicorn():
-	uvicorn.run("FastAPI:app", host=HOST, port=PORT, proxy_headers=True, forwarded_allow_ips="*", workers=1, log_level="info")
+    uvicorn.run("FastAPI:app", host=HOST, port=PORT, proxy_headers=True, forwarded_allow_ips="*", workers=1, log_level="info")
 
 def run_gunicorn():
     subprocess.run([

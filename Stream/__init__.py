@@ -1,4 +1,4 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from KekikStream.Core import PluginManager, ExtractorManager, MediaManager, MovieInfo, SeriesInfo
 from FastAPI          import PROXIES

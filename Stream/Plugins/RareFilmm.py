@@ -1,4 +1,4 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult, HTMLHelper
 import asyncio
@@ -6,8 +6,8 @@ import asyncio
 class RareFilmm(PluginBase):
     """
     RareFilmm Plugin Implementation
-    Website: https://rarefilmm.com
-    Category: Rare and Classic Cinema
+    Website  : https://rarefilmm.com
+    Category : Rare and Classic Cinema
     """
     name        = "RareFilmm"
     language    = "en"
@@ -70,8 +70,8 @@ class RareFilmm(PluginBase):
 
         results  = []
         for item in helper.select("div.post"):
-            title  = item.select_text("h2 a")
-            href   = item.select_attr("h2 a", "href")
+            title = item.select_text("h2 a")
+            href  = item.select_attr("h2 a", "href")
 
             poster_style = item.select_attr("div.featured-image", "style") or ""
             poster_match = helper.regex_first(r"url\((.*?)\)", poster_style)
@@ -96,8 +96,8 @@ class RareFilmm(PluginBase):
 
         results  = []
         for item in helper.select("div.post"):
-            title  = item.select_text("h2 a")
-            href   = item.select_attr("h2 a", "href")
+            title = item.select_text("h2 a")
+            href  = item.select_attr("h2 a", "href")
 
             poster_style = item.select_attr("div.featured-image", "style") or ""
             poster_match = helper.regex_first(r"url\((.*?)\)", poster_style)

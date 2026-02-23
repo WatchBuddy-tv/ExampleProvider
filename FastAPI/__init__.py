@@ -1,4 +1,4 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from fastapi                 import FastAPI, APIRouter, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

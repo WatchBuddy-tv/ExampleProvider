@@ -1,4 +1,4 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from FastAPI import JSONResponse
 from .       import api_v1_router, api_v1_global_message
@@ -17,7 +17,7 @@ async def ytdlp_extract(url: str = None):
         # If yt-dlp fails, use original URL
         return {
             **api_v1_global_message,
-            "result" : {
+            "result"      : {
                 "title"       : "Video",
                 "stream_url"  : url,
                 "duration"    : 0,
@@ -30,14 +30,14 @@ async def ytdlp_extract(url: str = None):
 
     return {
         **api_v1_global_message,
-        "result" : {
-            "title"      : info.get("title", "Video"),
-            "stream_url" : info.get("stream_url"),
-            "duration"   : info.get("duration", 0),
-            "is_live"    : info.get("is_live", False),
-            "thumbnail"  : info.get("thumbnail"),
-            "format"     : info.get("format", "mp4"),
-            "resolved"   : True,
-            "resolved_by": "ytdlp"
+        "result"      : {
+            "title"       : info.get("title", "Video"),
+            "stream_url"  : info.get("stream_url"),
+            "duration"    : info.get("duration", 0),
+            "is_live"     : info.get("is_live", False),
+            "thumbnail"   : info.get("thumbnail"),
+            "format"      : info.get("format", "mp4"),
+            "resolved"    : True,
+            "resolved_by" : "ytdlp"
         }
     }

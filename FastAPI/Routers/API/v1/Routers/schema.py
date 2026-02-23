@@ -1,7 +1,7 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
-from FastAPI  import Request, PROVIDER_NAME, PROVIDER_DESCRIPTION, PROXY_URL, PROXY_FALLBACK_URL
-from .        import api_v1_router
+from FastAPI import Request, PROVIDER_NAME, PROVIDER_DESCRIPTION, PROXY_URL, PROXY_FALLBACK_URL
+from .       import api_v1_router
 
 @api_v1_router.get("/schema")
 async def get_schema(request: Request):

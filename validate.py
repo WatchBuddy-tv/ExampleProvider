@@ -1,17 +1,17 @@
-# This tool was written by @keyiflerolsun | for @KekikAkademi
+# Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 import sys, os
-from asyncio          import run
-from random           import choice
-from time             import time
-from pydantic        import ValidationError
-from rich.console    import Console
-from rich.table      import Table
-from rich.panel      import Panel
-from rich.text       import Text
-from rich.box        import ROUNDED, HEAVY_EDGE, SIMPLE_HEAD
-from rich.align      import Align
-from rich.live       import Live
+from asyncio      import run
+from random       import choice
+from time         import time
+from pydantic     import ValidationError
+from rich.console import Console
+from rich.table   import Table
+from rich.panel   import Panel
+from rich.text    import Text
+from rich.box     import ROUNDED, HEAVY_EDGE, SIMPLE_HEAD
+from rich.align   import Align
+from rich.live    import Live
 
 # Ensure current directory is in path and models are accessible
 sys.path.append(os.getcwd())
@@ -28,7 +28,7 @@ from KekikStream.Core import (
 from FastAPI import PROXIES
 
 # Premium Color Palette
-C_BRAND     = "#00FF88" # WatchBuddy Green
+C_BRAND     = "  #00FF88" # WatchBuddy Green
 C_INFO      = "dodger_blue1"
 C_WARN      = "orange3"
 C_ERR       = "bright_red"
@@ -74,12 +74,12 @@ class ProviderValidator:
 
     def _display_data_list(self, title: str, items: list, model_cls, icon: str = "📂"):
         table = Table(
-            show_header=True,
-            header_style=f"bold {C_INFO}",
-            border_style=C_MUTED,
-            box=ROUNDED,
-            expand=False,
-            padding=(0, 1)
+            show_header  = True,
+            header_style = f"bold {C_INFO}",
+            border_style = C_MUTED,
+            box          = ROUNDED,
+            expand       = False,
+            padding      = (0, 1)
         )
         table.add_column("#", justify="right", style=C_MUTED)
         table.add_column("Title", style=f"bold {C_SUCCESS}")
@@ -170,12 +170,12 @@ class ProviderValidator:
             # Create a combined display if it's a series
             metadata_panel = Panel(
                 grid,
-                title=f"{type_tag} [bold white]{item.title}[/]",
-                subtitle=f"[{C_MUTED}]{item.url}[/]",
-                border_style=C_HIGHLIGHT,
-                box=ROUNDED,
-                padding=(1, 4),
-                expand=False
+                title        = f"{type_tag} [bold white]{item.title}[/]",
+                subtitle     = f"[{C_MUTED}]{item.url}[/]",
+                border_style = C_HIGHLIGHT,
+                box          = ROUNDED,
+                padding      = (1, 4),
+                expand       = False
             )
 
             if ep_count > 0:
