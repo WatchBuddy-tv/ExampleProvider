@@ -28,7 +28,7 @@ from KekikStream.Core import (
 from FastAPI import PROXIES
 
 # Premium Color Palette
-C_BRAND     = "  #00FF88" # WatchBuddy Green
+C_BRAND     = "#00FF88"  # WatchBuddy Green
 C_INFO      = "dodger_blue1"
 C_WARN      = "orange3"
 C_ERR       = "bright_red"
