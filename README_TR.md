@@ -55,6 +55,14 @@ Gereksinimler:
 - Sağlayıcı `GET /api/v1/schema` endpoint’ini sunmalıdır.
 - Cevapta `provider_name` ve `description` alanları bulunmalıdır (opsiyonel proxy URL’leri dahil edilebilir).
 
+### 📱 Ekosisteme Göz Atın
+
+WatchBuddy **Android** ve **iOS**'ta kullanılabilir.
+
+Daha fazla içerik keşfetmek ve bir film ya da diziyi odaya aktarmak için şu servisleri de kullanabilirsiniz:
+- 🌐 **Stream Web:** stream.watchbuddy.tv
+- 🤖 **Telegram Bot:** t.me/WatchBuddyRobot
+
 ---
 
 ## 📂 Proje Yapısı

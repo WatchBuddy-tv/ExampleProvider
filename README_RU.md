@@ -58,6 +58,16 @@ python run.py
 
 ---
 
+## 📱 Откройте экосистему
+
+WatchBuddy доступен на **Android** и **iOS**.
+
+Чтобы находить больше тайтлов и быстро отправлять фильм или сериал в room, вы также можете использовать один из сервисов:
+- 🌐 **Stream Web:** https://stream.watchbuddy.tv
+- 🤖 **Telegram-бот:** https://t.me/WatchBuddyRobot
+
+---
+
 ## 📂 Структура проекта
 
 ```text

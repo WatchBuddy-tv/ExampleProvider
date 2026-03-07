@@ -55,6 +55,14 @@ Requirements:
 - Your provider must expose `GET /api/v1/schema`.
 - The response must include `provider_name` and `description` (plus optional proxy URLs).
 
+### 📱 Explore the Ecosystem
+
+WatchBuddy is available on **Android** and **iOS**.
+
+For more ways to discover titles and quickly send them into a room, you can also use one of these services:
+- 🌐 **Stream Web:** https://stream.watchbuddy.tv
+- 🤖 **Telegram Bot:** https://t.me/WatchBuddyRobot
+
 ---
 
 ## 📂 Project Structure
