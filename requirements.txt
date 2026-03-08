@@ -8,5 +8,5 @@ gunicorn
 PyYAML
 python-multipart
 python-dotenv
-KekikStream>=2.9.2
+KekikStream>=2.9.4
 yt-dlp[default,curl-cffi]
