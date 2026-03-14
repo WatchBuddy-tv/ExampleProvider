@@ -8,7 +8,7 @@
 **WatchBuddy कंटेंट प्रदाताओं के लिए आधिकारिक SDK और शुरुआती ढांचा**
 विकेंद्रीकृत स्क्रेपर बनाइए, उन्हें अलग वातावरण में परखिए, और बिना अतिरिक्त झंझट के WatchBuddy इकोसिस्टम से जोड़िए।
 
-[🇺🇸 English](./README.md) • [🇹🇷 Türkçe](./README_TR.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md) • [🇺🇦 Українська](./README_UK.md) • [🇮🇳 हिन्दी](./README_HI.md)
+[🇺🇸 English](./README.md) • [🇹🇷 Türkçe](./README_TR.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md) • [🇺🇦 Українська](./README_UK.md) • [🇮🇳 हिन्दी](./README_HI.md) • [🇨🇳 简体中文](./README_ZH.md)
 
 ---
 
