@@ -8,7 +8,7 @@
 **WatchBuddy İçerik Sağlayıcıları için Resmi SDK ve Başlangıç Paketi**
 Merkeziyetsiz tarayıcılar oluşturun, izole ortamda test edin ve WatchBuddy ekosistemine sorunsuz entegre olun. 🚀
 
-[🇺🇸 English](./README.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md) • [🇺🇦 Українська](./README_UK.md)
+[🇺🇸 English](./README.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md) • [🇺🇦 Українська](./README_UK.md) • [🇮🇳 हिन्दी](./README_HI.md)
 
 ---
 

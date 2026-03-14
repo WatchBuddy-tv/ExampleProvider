@@ -8,7 +8,7 @@
 **Офіційний SDK і boilerplate для контент-провайдерів WatchBuddy**
 Створюйте децентралізовані скрейпери, тестуйте їх ізольовано та без зайвих кроків інтегруйте в екосистему WatchBuddy. 🚀
 
-[🇺🇸 English](./README.md) • [🇹🇷 Türkçe](./README_TR.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md)
+[🇺🇸 English](./README.md) • [🇹🇷 Türkçe](./README_TR.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md) • [🇮🇳 हिन्दी](./README_HI.md)
 
 ---
 

@@ -8,7 +8,7 @@
 **Official SDK and Boilerplate for WatchBuddy Content Providers**
 Build decentralized scrapers, test them in isolation, and integrate seamlessly with the WatchBuddy ecosystem. 🚀
 
-[🇹🇷 Türkçe](./README_TR.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md) • [🇺🇦 Українська](./README_UK.md)
+[🇹🇷 Türkçe](./README_TR.md) • [🇫🇷 Français](./README_FR.md) • [🇷🇺 Русский](./README_RU.md) • [🇺🇦 Українська](./README_UK.md) • [🇮🇳 हिन्दी](./README_HI.md)
 
 ---
 
