@@ -34,7 +34,7 @@ git clone https://github.com/keyiflerolsun/ExampleProvider.git
 cd ExampleProvider
 
 # 2. Встановіть залежності
-pip install -r requirements.txt
+pip install .
 
 # 3. Налаштуйте середовище
 cp .env.example .env

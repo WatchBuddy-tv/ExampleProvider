@@ -33,7 +33,7 @@ git clone https://github.com/keyiflerolsun/ExampleProvider.git
 cd ExampleProvider
 
 # 2. Install dependencies
-pip install -r requirements.txt
+pip install .
 
 # 3. Setup environment
 cp .env.example .env

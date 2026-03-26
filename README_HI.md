@@ -33,7 +33,7 @@ git clone https://github.com/keyiflerolsun/ExampleProvider.git
 cd ExampleProvider
 
 # 2. निर्भरताएँ स्थापित करें
-pip install -r requirements.txt
+pip install .
 
 # 3. परिवेश तैयार करें
 cp .env.example .env

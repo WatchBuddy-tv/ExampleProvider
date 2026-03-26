@@ -33,7 +33,7 @@ git clone https://github.com/keyiflerolsun/ExampleProvider.git
 cd ExampleProvider
 
 # 2. Bağımlılıkları yükleyin
-pip install -r requirements.txt
+pip install .
 
 # 3. Ayarları yapılandırın
 cp .env.example .env
