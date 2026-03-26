@@ -3,6 +3,8 @@
 from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, ExtractResult
 from json             import dumps, loads
 from re               import compile, MULTILINE
+from contextlib       import suppress
+from urllib.parse     import unquote_plus
 
 class CanliTV(PluginBase):
     name        = "CanliTV"
@@ -22,6 +24,22 @@ class CanliTV(PluginBase):
     url_re        = compile(r'^(https?://[^\s]+)', MULTILINE)
     user_agent_re = compile(r'#EXTVLCOPT:http-user-agent=(.*)')
     referer_re    = compile(r'#EXTVLCOPT:http-referrer=(.*)')
+
+    @staticmethod
+    def _encode(obj: dict) -> str:
+        """Dict'i boşluksuz kompakt JSON string'e dönüştürür."""
+        return dumps(obj, ensure_ascii=False, separators=(',', ':'))
+
+    @staticmethod
+    def _decode(url: str) -> dict | None:
+        """JSON string'i parse eder; çift URL-encoding'e karşı gerektiğinde iki kez unquote dener."""
+        current = unquote_plus(url)
+        with suppress(Exception):
+            return loads(current)
+        current = unquote_plus(current)
+        with suppress(Exception):
+            return loads(current)
+        return None
 
     async def _get_playlist(self) -> list[dict]:
         istek = await self.httpx.get(self.main_url)
@@ -105,7 +123,7 @@ class CanliTV(PluginBase):
             MainPageResult(
                 category = category,
                 title    = kanal["title"],
-                url      = dumps(kanal),
+                url      = self._encode(kanal),
                 poster   = kanal["poster"],
             )
                 for kanal in channels[start:end]
@@ -131,20 +149,20 @@ class CanliTV(PluginBase):
             if any(query in alan.casefold() for alan in alanlar):
                 sonuclar.append(SearchResult(
                     title  = kanal["title"],
-                    url    = dumps(kanal),
+                    url    = self._encode(kanal),
                     poster = kanal["poster"],
                 ))
 
         return sonuclar[:50]
 
     async def load_item(self, url: str) -> MovieInfo:
-        try:
-            kanal = loads(url)
-        except Exception:
-            kanal = None
+        kanal_url = url
+        kanal     = self._decode(url)
 
         if not kanal:
             kanal = next((item for item in await self._get_playlist() if item["url"] == url), None)
+            if kanal:
+                kanal_url = self._encode(kanal)
 
         if not kanal:
             return MovieInfo(
@@ -168,7 +186,7 @@ class CanliTV(PluginBase):
             etiketler.append(kanal["country"])
 
         return MovieInfo(
-            url         = dumps(kanal),
+            url         = kanal_url,
             title       = kanal["title"],
             poster      = kanal["poster"],
             description = aciklama,
@@ -177,9 +195,8 @@ class CanliTV(PluginBase):
         )
 
     async def load_links(self, url: str) -> list[ExtractResult]:
-        try:
-            kanal = loads(url)
-        except Exception:
+        kanal = self._decode(url)
+        if not kanal:
             kanal = {"title": "Canlı Yayın", "url": url}
 
         return [
