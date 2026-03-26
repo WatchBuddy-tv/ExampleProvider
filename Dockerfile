@@ -1,7 +1,7 @@
 # This tool was written by @keyiflerolsun | for @KekikAkademi
 
 # * Docker Image
-FROM python:3.13.7-slim-trixie
+FROM python:3.14.3-slim-trixie
 
 # * Non-interactive apt/locale setup
 ENV DEBIAN_FRONTEND=noninteractive
@@ -39,10 +39,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     LANGUAGE="tr_TR:tr" \
     TZ="Europe/Istanbul"
 
+# * uv installation
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 # * Install dependencies
-RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install --no-cache-dir -U setuptools wheel && \
-    python3 -m pip install --no-cache-dir -Ur requirements.txt
+RUN uv pip install --system --no-cache .
 
 # * Health Check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
