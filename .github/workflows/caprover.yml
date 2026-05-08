@@ -22,6 +22,14 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "22"
+
+      - name: Install CapRover CLI
+        run : npm i -g caprover
+
       - name: Check for Changes
         id  : check_changes
         run : |
@@ -43,8 +51,8 @@ jobs:
 
       - name: Deploy to CapRover
         if  : steps.check_changes.outputs.deploy == 'true'
-        uses: caprover/deploy-from-github@v1.1.2
-        with:
-          server: ${{ secrets.SERVER }}
-          app   : ${{ secrets.PROVIDER_APP }}
-          token : ${{ secrets.PROVIDER_TOKEN }}
+        run : |
+          caprover deploy --caproverUrl "${{ secrets.SERVER }}" \
+          --appToken "${{ secrets.PROVIDER_TOKEN }}" \
+          --appName " ${{ secrets.PROVIDER_APP }}" \
+          --tarFile ./deploy.tar
