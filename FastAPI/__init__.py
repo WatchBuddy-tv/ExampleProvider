@@ -66,6 +66,9 @@ app = FastAPI(title=PROJECT, lifespan=lifespan)
 
 # ! ----------------------------------------» Middlewares
 
+from .Modules import _guard
+
+
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
