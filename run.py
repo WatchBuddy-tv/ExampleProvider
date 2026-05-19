@@ -17,7 +17,7 @@ def run_gunicorn():
         "FastAPI:app",
         "--log-level", "info",
         "--bind", f"{HOST}:{PORT}",
-        "--workers", str(workers),
+        "--workers", "2",
         "--keep-alive", "5",
         "--worker-tmp-dir", "/dev/shm",
         "--max-requests", "10000", "--max-requests-jitter", "1000"
