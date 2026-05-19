@@ -8,7 +8,7 @@ cpu     = os.cpu_count() or 1
 workers = 2 * cpu + 1
 
 def run_uvicorn():
-    uvicorn.run("FastAPI:app", host=HOST, port=PORT, proxy_headers=True, forwarded_allow_ips="*", workers=workers, log_level="info")
+    uvicorn.run("FastAPI:app", host=HOST, port=PORT, proxy_headers=True, forwarded_allow_ips="*", workers=1, log_level="info")
 
 def run_gunicorn():
     subprocess.run([
@@ -25,7 +25,7 @@ def run_gunicorn():
 
 if __name__ == "__main__":
     try:
-        run_gunicorn()
+        run_uvicorn()
         cikis_yap(False)
     except Exception as error:
         hata_yakala(error)
