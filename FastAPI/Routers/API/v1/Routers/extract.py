@@ -16,6 +16,22 @@ async def extract(request: Request, encoded_url: str = None, encoded_referer: st
     if not encoded_url:
         return JSONResponse(status_code=410, content={"error": f"{request.url.path}?_encoded_url=&_encoded_referer="})
 
+    # Doğrudan medya dosyaları için bypass (m3u8, mp4 vb.)
+    url_lower = encoded_url.lower()
+    is_direct = any(ext in url_lower for ext in (".m3u8", ".mp4", ".mpd", ".webm", ".mkv", ".avi"))
+    if is_direct:
+        return {
+            **api_v1_global_message,
+            "result"        : {
+                "name"          : "direct",
+                "url"           : encoded_url,
+                "referer"       : encoded_referer,
+                "user_agent"    : request.headers.get("user-agent"),
+                "extra_headers" : {},
+                "subtitles"     : []
+            }
+        }
+
     # --- Safety 1: Negative Cache (Cache Miss Protection) ---
     now = time.time()
     if encoded_url in _negative_cache:
