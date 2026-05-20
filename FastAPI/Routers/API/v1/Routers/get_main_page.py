@@ -6,6 +6,7 @@ from ..Libs  import plugin_manager
 
 from random       import choice
 from urllib.parse import quote_plus
+import asyncio
 
 @api_v1_router.get("/get_main_page")
 async def get_main_page(request: Request, plugin: str = None, page: int = 1, encoded_url: str = None, encoded_category: str = None):
@@ -18,7 +19,11 @@ async def get_main_page(request: Request, plugin: str = None, page: int = 1, enc
         return JSONResponse(status_code=410, content={"error": f"{request.url.path}?plugin={_plugin or choice(plugin_names)}&page=1&encoded_url=&encoded_category="})
 
     plugin = plugin_manager.select_plugin(_plugin)
-    result = await plugin.get_main_page(page, encoded_url, encoded_category)
+    try:
+        result = await asyncio.wait_for(plugin.get_main_page(page, encoded_url, encoded_category), timeout=3.0)
+    except asyncio.TimeoutError:
+        result = []
+
     for item in result:
         item.url = quote_plus(item.url)
 
