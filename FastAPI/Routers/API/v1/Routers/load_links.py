@@ -18,7 +18,7 @@ async def load_links(request: Request, plugin: str = None, encoded_url: str = No
 
     plugin = plugin_manager.select_plugin(_plugin)
     try:
-        links = await asyncio.wait_for(plugin.load_links(encoded_url), timeout=3.0)
+        links = await asyncio.wait_for(plugin.load_links(encoded_url), timeout=10.0)
     except asyncio.TimeoutError:
         links = []
 
