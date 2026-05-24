@@ -1,11 +1,51 @@
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
-from ..       import app as kekik_FastAPI, Request, Response
-from ._IP_Log import ip_log
+from ..          import app as kekik_FastAPI, Request, Response
+from ._IP_Log    import ip_log
+from collections import defaultdict, deque
+from time        import time
+import asyncio
+import os
 
 # ! ----------------------------------------» Güvenlik Listeleri
-_BLOCKED_IPS  = []
-_BLOCKED_ISPS = ["contabo", "digitalocean", "hetzner", "ovh", "linode", "amazon", "google", "azure", "vultr", "choopa", "m247", "data", "alexhost"]
+_BLOCKED_IPS                 = []
+_BLOCKED_ISPS                = ["contabo", "digitalocean", "hetzner", "ovh", "linode", "amazon", "google", "azure", "vultr", "choopa", "m247", "data", "alexhost"]
+_RATE_LIMIT_ENABLED          = (os.getenv("RATE_LIMIT_ENABLED", "true") or "true").strip().lower() in ("1", "true", "yes", "on")
+_RATE_LIMIT_MAX_REQUESTS     = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "180") or "180")
+_RATE_LIMIT_WINDOW_SECONDS   = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60") or "60")
+_RATE_LIMIT_EXEMPT_PATH_PART = (
+    "/health",
+    "/favicon.ico",
+    "/static",
+    "/webfonts",
+    "/manifest.json",
+    "com.chrome.devtools.json",
+)
+_rate_limit_hits = defaultdict(deque)  # (IP, endpoint) -> deque[timestamps]
+_rate_limit_lock = asyncio.Lock()
+
+async def _check_ip_rate_limit(client_ip: str, request_path: str) -> tuple[bool, int]:
+    if not _RATE_LIMIT_ENABLED:
+        return True, 0
+
+    if any(skip in request_path for skip in _RATE_LIMIT_EXEMPT_PATH_PART):
+        return True, 0
+
+    now = time()
+    async with _rate_limit_lock:
+        rate_key = (client_ip, request_path)
+        hits     = _rate_limit_hits[rate_key]
+        cutoff   = now - _RATE_LIMIT_WINDOW_SECONDS
+
+        while hits and hits[0] <= cutoff:
+            hits.popleft()
+
+        if len(hits) >= _RATE_LIMIT_MAX_REQUESTS:
+            retry_after = max(1, int(_RATE_LIMIT_WINDOW_SECONDS - (now - hits[0])))
+            return False, retry_after
+
+        hits.append(now)
+        return True, 0
 
 @kekik_FastAPI.middleware("http")
 async def guvenlik_duvari(request: Request, call_next):
@@ -17,6 +57,13 @@ async def guvenlik_duvari(request: Request, call_next):
     # ! 2. Manuel IP Engelleme
     if client_ip in _BLOCKED_IPS:
         return Response(status_code=403)
+
+    allowed, retry_after = await _check_ip_rate_limit(client_ip, request.url.path)
+    if not allowed:
+        return Response(
+            status_code = 429,
+            headers     = {"Retry-After": str(retry_after)}
+        )
 
     # ! 3. ISP / Veri Merkezi Bloklama
     ip_detay = await ip_log(client_ip)
