@@ -9,8 +9,8 @@ from urllib.parse     import unquote_plus
 class CanliTV(PluginBase):
     name        = "CanliTV"
     language    = "tr"
-    main_url    = "https://codeberg.org/ramazansancar/streams-tr/raw/branch/main/list.m3u"
-    favicon     = "https://www.google.com/s2/favicons?domain=codeberg.org&sz=64"
+    main_url    = "https://raw.githubusercontent.com/feroxx/test/refs/heads/main/Kanallar/canlitv.m3u"
+    favicon     = "https://upload.wikimedia.org/wikipedia/commons/6/6f/IPTV.png"
     description = "Türkiye odaklı canlı TV M3U listesi."
 
     main_page = {"all": "Tümü"}
