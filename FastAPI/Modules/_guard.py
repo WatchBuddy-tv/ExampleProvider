@@ -4,12 +4,15 @@ from ..          import app as kekik_FastAPI, Request, Response
 from ._IP_Log    import ip_log
 from collections import defaultdict, deque
 from time        import time
-import asyncio
-import os
+import asyncio, os
 
 # ! ----------------------------------------» Güvenlik Listeleri
-_BLOCKED_IPS                 = []
-_BLOCKED_ISPS                = ["contabo", "digitalocean", "hetzner", "ovh", "linode", "amazon", "google", "azure", "vultr", "choopa", "m247", "data", "alexhost"]
+_BLOCKED_IPS  = []
+_BLOCKED_ISPS = [
+    "contabo", "digitalocean", "hetzner", "ovh", "linode", "amazon", "google", "azure",
+    "vultr", "choopa", "m247", "alexhost", "datacamp", "zenlayer", "verizon", "carat",
+    "unitas", "alastyr", "veridyen", "radore", "dgn", "premierdc", "netasistan", "hosting", "datacenter"
+]
 _RATE_LIMIT_ENABLED          = (os.getenv("RATE_LIMIT_ENABLED", "true") or "true").strip().lower() in ("1", "true", "yes", "on")
 _RATE_LIMIT_MAX_REQUESTS     = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "180") or "180")
 _RATE_LIMIT_WINDOW_SECONDS   = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60") or "60")
@@ -21,13 +24,19 @@ _RATE_LIMIT_EXEMPT_PATH_PART = (
     "/manifest.json",
     "com.chrome.devtools.json",
 )
-_rate_limit_hits = defaultdict(deque)  # (IP, endpoint) -> deque[timestamps]
+
+# (IP, endpoint, plugin_adi) -> deque[timestamps]
+_rate_limit_hits = defaultdict(deque)
 _rate_limit_lock = asyncio.Lock()
 
-async def _check_ip_rate_limit(client_ip: str, request_path: str) -> tuple[bool, int]:
+# IP API sorgu limitini korumak için Cache mekanizması
+_ISP_CACHE = {}
+
+async def _check_ip_rate_limit(client_ip: str, request: Request) -> tuple[bool, int]:
     if not _RATE_LIMIT_ENABLED:
         return True, 0
 
+    request_path = request.url.path
     if any(skip in request_path for skip in _RATE_LIMIT_EXEMPT_PATH_PART):
         return True, 0
 
@@ -56,23 +65,32 @@ async def guvenlik_duvari(request: Request, call_next):
 
     # ! 2. Manuel IP Engelleme
     if client_ip in _BLOCKED_IPS:
-        return Response(status_code=403)
+        return Response(status_code=403, content="IP Blocked")
 
-    allowed, retry_after = await _check_ip_rate_limit(client_ip, request.url.path)
+    # ! 3. Rate Limit Kontrolü
+    allowed, retry_after = await _check_ip_rate_limit(client_ip, request)
     if not allowed:
         return Response(
             status_code = 429,
-            headers     = {"Retry-After": str(retry_after)}
+            headers     = {"Retry-After": str(retry_after)},
+            content     = "Too Many Requests for this resource"
         )
 
-    # ! 3. ISP / Veri Merkezi Bloklama
-    ip_detay = await ip_log(client_ip)
-    # request.state.ip_detay = ip_detay # _istek.py loglaması için sakla (ExampleProvider'da yoksa kalsın)
+    # ! 4. ISP / Veri Merkezi Bloklama
+    if client_ip in _ISP_CACHE:
+        isp_bilgisi = _ISP_CACHE[client_ip]
+    else:
+        try:
+            ip_detay               = await ip_log(client_ip)
+            request.state.ip_detay = ip_detay  # _istek.py loglaması için sakla
 
-    # Tüm değerleri birleştirip küçük harfe çevirerek kontrol et
-    isp_bilgisi = " ".join(str(v) for v in ip_detay.values()).lower()
+            # Tüm değerleri birleştirip küçük harfe çevirerek kontrol et
+            isp_bilgisi = " ".join(str(v) for v in ip_detay.values()).lower()
+            _ISP_CACHE[client_ip] = isp_bilgisi
+        except Exception:
+            isp_bilgisi = ""
 
     if any(sirket in isp_bilgisi for sirket in _BLOCKED_ISPS):
-        return Response(status_code=403)
+        return Response(status_code=403, content="Datacenter/Bot Traffic Blocked")
 
     return await call_next(request)
