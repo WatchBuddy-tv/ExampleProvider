@@ -5,28 +5,35 @@ from json             import dumps, loads
 from re               import compile, MULTILINE
 from contextlib       import suppress
 from urllib.parse     import unquote_plus
+import time
 
-class CanliTV(PluginBase):
-    name        = "CanliTV"
-    language    = "tr"
-    main_url    = "https://raw.githubusercontent.com/feroxx/test/refs/heads/main/Kanallar/canlitv.m3u"
+class IPTVOrg(PluginBase):
+    name        = "IPTVOrg"
+    language    = "multi"
+    main_url    = "https://iptv-org.github.io/iptv/index.m3u"
     favicon     = "https://upload.wikimedia.org/wikipedia/commons/6/6f/IPTV.png"
-    description = "Türkiye odaklı canlı TV M3U listesi."
+    description = "iptv-org tarafından sağlanan küresel canlı TV listesi."
 
     main_page = {"all": "Tümü"}
 
-    extinf_re     = compile(r'#EXTINF:-1(.*?),(.*)$')
-    group_re      = compile(r'group-title="([^"]+)"')
-    logo_re       = compile(r'tvg-logo="([^"]+)"')
-    language_re   = compile(r'tvg-language="([^"]+)"')
-    country_re    = compile(r'tvg-country="([^"]+)"')
-    channel_id_re = compile(r'tvg-id="([^"]+)"')
-    url_re        = compile(r'^(https?://[^\s]+)', MULTILINE)
-    user_agent_re = compile(r'#EXTVLCOPT:http-user-agent=(.*)')
-    referer_re    = compile(r'#EXTVLCOPT:http-referrer=(.*)')
+    extinf_re          = compile(r'#EXTINF:-1(.*?),(.*)$')
+    group_re           = compile(r'group-title="([^"]+)"')
+    logo_re            = compile(r'tvg-logo="([^"]+)"')
+    language_re        = compile(r'tvg-language="([^"]+)"')
+    country_re         = compile(r'tvg-country="([^"]+)"')
+    channel_id_re      = compile(r'tvg-id="([^"]+)"')
+    url_re             = compile(r'^(https?://[^\s]+)', MULTILINE)
+    user_agent_re      = compile(r'#EXTVLCOPT:http-user-agent=(.*)')
+    referer_re         = compile(r'#EXTVLCOPT:http-referrer=(.*)')
+    user_agent_attr_re = compile(r'http-user-agent="([^"]+)"')
+    referer_attr_re    = compile(r'http-referrer="([^"]+)"')
+
+    _playlist_cache      = None
+    _playlist_cache_time = 0
+    _cache_ttl           = 1800  # 30 minutes cache
 
     def _wrap_plugin_methods(self):
-        """Canlı TV için otomatik TMDB ve altyazı zenginleştirmelerini devre dışı bırakır."""
+        """IPTV için otomatik TMDB ve altyazı zenginleştirmelerini devre dışı bırakır."""
         pass
 
     @staticmethod
@@ -46,6 +53,23 @@ class CanliTV(PluginBase):
         return None
 
     async def _get_playlist(self) -> list[dict]:
+        now = time.time()
+        cls = self.__class__
+        if cls._playlist_cache is not None and (now - cls._playlist_cache_time) < cls._cache_ttl:
+            # Re-initialize the main_page categories for this instance based on cached playlist
+            kategoriler = ["all"]
+            for kanal in cls._playlist_cache:
+                grup_raw = kanal["group"]
+                for g in grup_raw.split(";"):
+                    g_clean = g.strip()
+                    if g_clean and g_clean not in kategoriler:
+                        kategoriler.append(g_clean)
+            dinamik_main_page = {"all": "Tümü"}
+            dinamik_main_page.update({kategori: kategori for kategori in kategoriler if kategori != "all"})
+            self.main_page = dinamik_main_page
+            cls.main_page = dict(dinamik_main_page)
+            return cls._playlist_cache
+
         istek = await self.httpx.get(self.main_url)
         istek.raise_for_status()
 
@@ -85,6 +109,13 @@ class CanliTV(PluginBase):
                 ulke = self.country_re.search(extinf_raw)
                 kim  = self.channel_id_re.search(extinf_raw)
 
+                if not user_agent:
+                    if ua_attr_eslesme := self.user_agent_attr_re.search(extinf_raw):
+                        user_agent = ua_attr_eslesme.group(1).strip() or None
+                if not referer:
+                    if ref_attr_eslesme := self.referer_attr_re.search(extinf_raw):
+                        referer = ref_attr_eslesme.group(1).strip() or None
+
                 playlist.append({
                     "title"      : title,
                     "group"      : (grup.group(1).strip() if grup else "Diğer") or "Diğer",
@@ -104,9 +135,11 @@ class CanliTV(PluginBase):
 
         kategoriler = ["all"]
         for kanal in playlist:
-            grup = kanal["group"]
-            if grup not in kategoriler:
-                kategoriler.append(grup)
+            grup_raw = kanal["group"]
+            for g in grup_raw.split(";"):
+                g_clean = g.strip()
+                if g_clean and g_clean not in kategoriler:
+                    kategoriler.append(g_clean)
 
         dinamik_main_page = {"all": "Tümü"}
         dinamik_main_page.update({kategori: kategori for kategori in kategoriler if kategori != "all"})
@@ -114,11 +147,15 @@ class CanliTV(PluginBase):
         self.main_page           = dinamik_main_page
         self.__class__.main_page = dict(dinamik_main_page)
 
+        cls._playlist_cache      = playlist
+        cls._playlist_cache_time = now
+
         return playlist
 
     async def get_main_page(self, page: int, url: str, category: str) -> list[MainPageResult]:
         channels = await self._get_playlist()
-        channels = channels if url == "all" else [kanal for kanal in channels if kanal["group"] == url]
+        if url != "all":
+            channels = [kanal for kanal in channels if url in [g.strip() for g in kanal["group"].split(";")]]
 
         start = max(page - 1, 0) * 24
         end   = start + 24
@@ -183,7 +220,7 @@ class CanliTV(PluginBase):
         if kanal.get("country"):
             aciklama += f" Ülke: {kanal['country']}."
 
-        etiketler = [kanal["group"], "Canlı TV", "IPTV"]
+        etiketler = [g.strip() for g in kanal["group"].split(";")] + ["Canlı TV", "IPTV"]
         if kanal.get("language"):
             etiketler.append(kanal["language"])
         if kanal.get("country"):

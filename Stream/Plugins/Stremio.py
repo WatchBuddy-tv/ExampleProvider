@@ -5,16 +5,17 @@ from urllib.parse     import quote
 import re, asyncio
 
 class Stremio(PluginBase):
-    """Stremio Wrapper (Discovery: Cinemeta | Streams: Streailer)"""
+    """Stremio Wrapper (Discovery: Cinemeta | Streams: Streailer + NoTorrent)"""
     name        = "Stremio"
     language    = "multi"
     main_url    = "https://web.stremio.com"
     favicon     = f"https://www.google.com/s2/favicons?domain={main_url}&sz=64"
-    description = "Combined Stremio Wrapper (Cinemeta Catalogs + Streailer Trailers)"
+    description = "Combined Stremio Wrapper (Cinemeta Catalogs + Streailer/NoTorrent Streams)"
 
     # API Resources
     CINEMETA  = "https://v3-cinemeta.strem.io"
     STREAILER = "https://9aa032f52161-streailer.baby-beamup.club"
+    NOTORRENT = "https://addon.notorrent2.workers.dev"
 
     # Expanded Main Page categories
     main_page = {
@@ -96,38 +97,61 @@ class Stremio(PluginBase):
 
         return MovieInfo(**content, duration=duration, actors=meta.get('cast', []))
 
+    async def _fetch_from_provider(self, base_url: str, provider_name: str, _type: str, _id: str) -> list[ExtractResult]:
+        """Helper to fetch and extract streams from a Stremio addon provider"""
+        try:
+            req = await self.httpx.get(f"{base_url}/stream/{_type}/{_id}.json", timeout=10.0)
+            if req.status_code != 200:
+                return []
+
+            tasks = []
+            for s in req.json().get('streams', []):
+                # Resolve stream URL (prefer direct url, then externalUrl, then YouTube ID)
+                source_url = s.get('url') or s.get('externalUrl') or (f"https://www.youtube.com/watch?v={s['ytId']}" if 'ytId' in s else None)
+                if not source_url:
+                    continue
+
+                # Filter out obvious premium / ad links (especially for NoTorrent)
+                if any(x in source_url for x in ["paypal.com", "nuvio.tv"]):
+                    continue
+
+                # Get name/title, prioritizing name then title
+                display_name = s.get('name') or s.get('title') or 'Source'
+
+                tasks.append(self.extract(
+                    url           = source_url,
+                    name_override = f"[{provider_name}] {display_name}"
+                ))
+
+            if not tasks:
+                return []
+
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            links = []
+            for res in results:
+                if isinstance(res, Exception):
+                    continue
+                if isinstance(res, list):
+                    links.extend(res)
+                elif res:
+                    links.append(res)
+            return links
+        except Exception:
+            return []
+
     async def load_links(self, url: str) -> list[ExtractResult]:
-        """Fetch and extract stream links using Streailer addon"""
+        """Fetch and extract stream links from Streailer and NoTorrent addons"""
         _type, _id = url.split("/")
-        req = await self.httpx.get(f"{self.STREAILER}/stream/{_type}/{_id}.json")
 
-        if req.status_code != 200:
-            return []
-
-        tasks = []
-        for s in req.json().get('streams', []):
-            # Resolve stream URL (prefer direct url, then externalUrl, then YouTube ID)
-            source_url = s.get('url') or s.get('externalUrl') or (f"https://www.youtube.com/watch?v={s['ytId']}" if 'ytId' in s else None)
-            if not source_url:
-                continue
-
-            # Pass to extractor manager for link resolution
-            tasks.append(self.extract(
-                url           = source_url,
-                name_override = s.get('name', 'Source')
-            ))
-
-        if not tasks:
-            return []
-
-        # Execute extractions in parallel
-        extracted_results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(
+            self._fetch_from_provider(self.STREAILER, "Streailer", _type, _id),
+            self._fetch_from_provider(self.NOTORRENT, "NoTorrent", _type, _id),
+            return_exceptions=True
+        )
 
         links = []
-        for res in extracted_results:
+        for res in results:
             if isinstance(res, list):
                 links.extend(res)
-            elif res:
-                links.append(res)
-
         return links

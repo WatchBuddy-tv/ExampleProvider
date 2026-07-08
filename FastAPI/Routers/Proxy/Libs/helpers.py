@@ -1,8 +1,20 @@
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
-from fastapi      import Request
-from urllib.parse import unquote, urljoin, quote
+from fastapi          import Request
+from urllib.parse     import unquote, urljoin, quote
+from FastAPI.Settings import PROXIES
 import httpx, traceback, re
+
+_proxy_url = PROXIES.get("https") or PROXIES.get("http") if PROXIES else None
+
+# Global shared AsyncClient for video and subtitle proxying
+shared_client = httpx.AsyncClient(
+    follow_redirects = True,
+    timeout          = httpx.Timeout(connect=10.0, read=60.0, write=10.0, pool=10.0),
+    verify           = False,
+    proxy            = _proxy_url,
+)
+
 
 DEFAULT_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5)"
 DEFAULT_REFERER    = "https://twitter.com/"
