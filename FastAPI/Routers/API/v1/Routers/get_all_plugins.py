@@ -6,9 +6,16 @@ from ..Libs  import plugin_manager
 
 from urllib.parse import quote_plus
 
+# Plugin seti sadece deploy'da değişir (PluginManager tek seferlik load_all()) - süreç ömrü boyunca cache'le
+_all_plugins_cache: list[dict] | None = None
+
 @api_v1_router.get("/get_all_plugins")
 async def get_all_plugins(request: Request):
     """Returns all plugin details - Optimized endpoint for the main page"""
+    global _all_plugins_cache
+    if _all_plugins_cache is not None:
+        return {**api_v1_global_message, "result": _all_plugins_cache}
+
     plugin_names = plugin_manager.get_plugin_names()
 
     all_plugins = []
@@ -32,4 +39,5 @@ async def get_all_plugins(request: Request):
             # Skip faulty plugin
             continue
 
+    _all_plugins_cache = all_plugins
     return {**api_v1_global_message, "result": all_plugins}

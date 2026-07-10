@@ -17,7 +17,7 @@ class NoTorrentExtractor(ExtractorBase):
         """
         if "redirect" in url:
             # Follow redirects to get the final stream URL
-            response = await self.httpx.get(url, follow_redirects=True)
+            response  = await self.httpx.get(url, follow_redirects=True)
             final_url = str(response.url)
         else:
             final_url = url

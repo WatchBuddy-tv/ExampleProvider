@@ -87,13 +87,17 @@ async def search(request: Request, plugin: str = None, query: str = None):
     except asyncio.TimeoutError:
         result = []
 
-    result = sorted(
-        result,
-        key=lambda item: (
-            -_similarity_score(_extract_title(item), query),
-            _normalize_text(_extract_title(item))
+    def _rank(items):
+        return sorted(
+            items,
+            key=lambda item: (
+                -_similarity_score(_extract_title(item), query),
+                _normalize_text(_extract_title(item))
+            )
         )
-    )
+
+    # CPU-bound regex/unicode scoring - event loop'u bloklamasın diye thread'e devret
+    result = await asyncio.to_thread(_rank, result)
 
     for item in result:
         if isinstance(item, dict):

@@ -31,6 +31,7 @@ class IPTVOrg(PluginBase):
     _playlist_cache      = None
     _playlist_cache_time = 0
     _cache_ttl           = 1800  # 30 minutes cache
+    _main_page_cache     = None
 
     def _wrap_plugin_methods(self):
         """IPTV için otomatik TMDB ve altyazı zenginleştirmelerini devre dışı bırakır."""
@@ -56,18 +57,7 @@ class IPTVOrg(PluginBase):
         now = time.time()
         cls = self.__class__
         if cls._playlist_cache is not None and (now - cls._playlist_cache_time) < cls._cache_ttl:
-            # Re-initialize the main_page categories for this instance based on cached playlist
-            kategoriler = ["all"]
-            for kanal in cls._playlist_cache:
-                grup_raw = kanal["group"]
-                for g in grup_raw.split(";"):
-                    g_clean = g.strip()
-                    if g_clean and g_clean not in kategoriler:
-                        kategoriler.append(g_clean)
-            dinamik_main_page = {"all": "Tümü"}
-            dinamik_main_page.update({kategori: kategori for kategori in kategoriler if kategori != "all"})
-            self.main_page = dinamik_main_page
-            cls.main_page = dict(dinamik_main_page)
+            self.main_page = dict(cls._main_page_cache)
             return cls._playlist_cache
 
         istek = await self.httpx.get(self.main_url)
@@ -149,6 +139,7 @@ class IPTVOrg(PluginBase):
 
         cls._playlist_cache      = playlist
         cls._playlist_cache_time = now
+        cls._main_page_cache     = dict(dinamik_main_page)
 
         return playlist
 

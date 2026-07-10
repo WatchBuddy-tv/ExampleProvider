@@ -126,7 +126,14 @@ class Stremio(PluginBase):
             if not tasks:
                 return []
 
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+            async def _safe_extract(coro):
+                try:
+                    return await coro
+                except Exception as e:
+                    return e
+
+            # Bounded concurrency: a JSON API can return many streams, avoid a fan-out spike
+            results = await self.gather_with_limit([_safe_extract(t) for t in tasks], limit=5)
 
             links = []
             for res in results:

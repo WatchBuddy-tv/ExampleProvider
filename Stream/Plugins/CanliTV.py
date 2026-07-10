@@ -5,6 +5,7 @@ from json             import dumps, loads
 from re               import compile, MULTILINE
 from contextlib       import suppress
 from urllib.parse     import unquote_plus
+import time
 
 class CanliTV(PluginBase):
     name        = "CanliTV"
@@ -14,6 +15,11 @@ class CanliTV(PluginBase):
     description = "Türkiye odaklı canlı TV M3U listesi."
 
     main_page = {"all": "Tümü"}
+
+    _playlist_cache      = None
+    _playlist_cache_time = 0
+    _cache_ttl           = 1800  # 30 minutes cache
+    _main_page_cache     = None
 
     extinf_re     = compile(r'#EXTINF:-1(.*?),(.*)$')
     group_re      = compile(r'group-title="([^"]+)"')
@@ -46,6 +52,12 @@ class CanliTV(PluginBase):
         return None
 
     async def _get_playlist(self) -> list[dict]:
+        now = time.time()
+        cls = self.__class__
+        if cls._playlist_cache is not None and (now - cls._playlist_cache_time) < cls._cache_ttl:
+            self.main_page = dict(cls._main_page_cache)
+            return cls._playlist_cache
+
         istek = await self.httpx.get(self.main_url)
         istek.raise_for_status()
 
@@ -113,6 +125,10 @@ class CanliTV(PluginBase):
 
         self.main_page           = dinamik_main_page
         self.__class__.main_page = dict(dinamik_main_page)
+
+        cls._playlist_cache      = playlist
+        cls._playlist_cache_time = now
+        cls._main_page_cache     = dict(dinamik_main_page)
 
         return playlist
 

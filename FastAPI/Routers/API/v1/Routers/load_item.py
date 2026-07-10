@@ -9,10 +9,25 @@ from urllib.parse import quote_plus
 import asyncio, time
 
 # Global safety guards
-_load_item_semaphore = asyncio.Semaphore(10)
-_inflight_loads      = {}  # CacheKey -> Future
-_negative_cache      = {}  # CacheKey -> (timestamp, error_msg)
-_NEG_CACHE_TTL       = 300  # 5 minutes
+_load_item_semaphores  = {}  # plugin_name -> Semaphore(10) - plugin başına, siteler birbirini bloklamasın
+_load_item_sem_lock    = asyncio.Lock()
+_inflight_loads        = {}  # CacheKey -> Future
+_negative_cache        = {}  # CacheKey -> (timestamp, error_msg)
+_NEG_CACHE_TTL         = 300  # 5 minutes
+_NEG_CACHE_MAX_ENTRIES = 5000
+
+async def _get_plugin_semaphore(plugin_name: str) -> asyncio.Semaphore:
+    async with _load_item_sem_lock:
+        if plugin_name not in _load_item_semaphores:
+            _load_item_semaphores[plugin_name] = asyncio.Semaphore(10)
+        return _load_item_semaphores[plugin_name]
+
+def _prune_bounded_cache(cache: dict, max_entries: int = 5000):
+    """Basit boyut sınırı: limit aşılırsa en eski kayıtları sil (FIFO, insertion-order dict)."""
+    overflow = len(cache) - max_entries
+    if overflow > 0:
+        for key in list(cache.keys())[:overflow]:
+            cache.pop(key, None)
 
 @api_v1_router.get("/load_item")
 async def load_item(request: Request, plugin: str = None, encoded_url: str = None):
@@ -39,7 +54,8 @@ async def load_item(request: Request, plugin: str = None, encoded_url: str = Non
         return await _inflight_loads[cache_key]
 
     async def _do_load():
-        async with _load_item_semaphore:
+        sem = await _get_plugin_semaphore(_plugin)
+        async with sem:
             try:
                 plugin_inst = plugin_manager.select_plugin(_plugin)
                 result      = await asyncio.wait_for(
@@ -49,6 +65,7 @@ async def load_item(request: Request, plugin: str = None, encoded_url: str = Non
 
                 if not result:
                     _negative_cache[cache_key] = (time.time(), "Item not found")
+                    _prune_bounded_cache(_negative_cache, _NEG_CACHE_MAX_ENTRIES)
                     return JSONResponse(status_code=404, content={"error": "Item not found."})
 
                 result.url = quote_plus(result.url)
@@ -60,9 +77,11 @@ async def load_item(request: Request, plugin: str = None, encoded_url: str = Non
                 return {**api_v1_global_message, "result": result}
             except asyncio.TimeoutError:
                 _negative_cache[cache_key] = (time.time(), "Timeout")
+                _prune_bounded_cache(_negative_cache, _NEG_CACHE_MAX_ENTRIES)
                 return JSONResponse(status_code=504, content={"error": "Item load timed out."})
             except Exception as e:
                 _negative_cache[cache_key] = (time.time(), str(e))
+                _prune_bounded_cache(_negative_cache, _NEG_CACHE_MAX_ENTRIES)
                 return JSONResponse(status_code=500, content={"error": str(e)})
 
     # Create task and track it
