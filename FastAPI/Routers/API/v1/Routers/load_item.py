@@ -1,8 +1,9 @@
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
-from FastAPI import Request, JSONResponse
-from .       import api_v1_router, api_v1_global_message
-from ..Libs  import plugin_manager, SeriesInfo
+from FastAPI            import Request, JSONResponse
+from .                  import api_v1_router, api_v1_global_message
+from ..Libs             import plugin_manager, SeriesInfo
+from ..Libs.cache_utils import TTLCache
 
 from random       import choice
 from urllib.parse import quote_plus
@@ -15,6 +16,7 @@ _inflight_loads        = {}  # CacheKey -> Future
 _negative_cache        = {}  # CacheKey -> (timestamp, error_msg)
 _NEG_CACHE_TTL         = 300  # 5 minutes
 _NEG_CACHE_MAX_ENTRIES = 5000
+_positive_cache        = TTLCache(ttl=3600)  # 1 sa - içerik detayı (yayın bilgisi) sık değişmiyor, plugin katmanıyla uyumlu
 
 async def _get_plugin_semaphore(plugin_name: str) -> asyncio.Semaphore:
     async with _load_item_sem_lock:
@@ -39,9 +41,15 @@ async def load_item(request: Request, plugin: str = None, encoded_url: str = Non
     if not _plugin:
         return JSONResponse(status_code=410, content={"error": f"{request.url.path}?plugin={_plugin or choice(plugin_names)}&encoded_url="})
 
-    # --- Safety 1: Negative Cache (Cache Miss Protection) ---
     cache_key = f"{_plugin}|{encoded_url}"
-    now       = time.time()
+
+    # --- Safety 0: Positive Cache (aynı içerik tekrar tekrar kazınmasın) ---
+    cached = _positive_cache.get(cache_key)
+    if cached is not None:
+        return {**api_v1_global_message, "result": cached}
+
+    # --- Safety 1: Negative Cache (Cache Miss Protection) ---
+    now = time.time()
     if cache_key in _negative_cache:
         ts, err = _negative_cache[cache_key]
         if (now - ts) < _NEG_CACHE_TTL:
@@ -74,6 +82,7 @@ async def load_item(request: Request, plugin: str = None, encoded_url: str = Non
                     for episode in result.episodes:
                         episode.url = quote_plus(episode.url)
 
+                _positive_cache.set(cache_key, result)
                 return {**api_v1_global_message, "result": result}
             except asyncio.TimeoutError:
                 _negative_cache[cache_key] = (time.time(), "Timeout")
