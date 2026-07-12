@@ -3,7 +3,17 @@
 from fastapi          import Request
 from urllib.parse     import unquote, urljoin, quote
 from FastAPI.Settings import PROXIES
-import httpx, traceback, re
+import httpx, traceback, re, json
+
+def parse_extra_headers(raw: str | None) -> dict[str, str] | None:
+    """'extra_headers' query param'ını (JSON obje) dict'e çözer. Bozuk/boş girişte sessizce None döner."""
+    if not raw:
+        return None
+    try:
+        parsed = json.loads(raw)
+        return parsed if isinstance(parsed, dict) else None
+    except Exception:
+        return None
 
 _proxy_url = PROXIES.get("https") or PROXIES.get("http") if PROXIES else None
 
@@ -55,22 +65,24 @@ def get_content_type(url: str, response_headers: dict) -> str:
     # 3. Varsayılan
     return "video/mp4"
 
-def prepare_request_headers(request: Request, url: str, referer: str | None, user_agent: str | None) -> dict:
+def prepare_request_headers(request: Request, url: str, referer: str | None, user_agent: str | None, extra_headers: dict[str, str] | None = None) -> dict:
     """Proxy isteği için headerları hazırlar"""
     headers = {}
 
-    # Standart headerlar (Eğer extra_headers'da yoksa ekle)
-    if "Accept" not in headers:
-        headers["Accept"] = "*/*"
-    if "Accept-Encoding" not in headers:
-        headers["Accept-Encoding"] = "identity"
-    if "Connection" not in headers:
-        headers["Connection"] = "keep-alive"
+    # Extractor'ın istediği ek headerlar (Origin/Auth/Cookie vb.) önce set edilir;
+    # Accept/UA/Referer altta override eder (goProxy parity) — Accept-Encoding
+    # özellikle identity kalmalı, aksi halde HLS manifest rewrite bozulur.
+    if extra_headers:
+        headers.update(extra_headers)
+
+    headers["Accept"]          = "*/*"
+    headers["Accept-Encoding"] = "identity"
+    headers["Connection"]      = "keep-alive"
 
     # user-agent ayarı
     if user_agent and user_agent != "None":
         headers["user-agent"] = user_agent
-    elif "user-agent" not in headers:
+    else:
         headers["user-agent"] = DEFAULT_USER_AGENT
 
     if referer and referer != "None":
@@ -137,7 +149,7 @@ def is_hls_segment(url: str) -> bool:
     segment_indicators = (".ts", ".m4s", ".aac", "seg-", "chunk-", "fragment", ".png", ".jpg", ".jpeg")
     return any(indicator in url_lower for indicator in segment_indicators)
 
-def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, user_agent: str = None, force_proxy: bool = False) -> bytes:
+def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, user_agent: str = None, force_proxy: bool = False, extra_headers: dict[str, str] | None = None) -> bytes:
     """
     HLS manifest içindeki göreceli URL'leri işler.
 
@@ -154,8 +166,9 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
     if not text.strip().startswith('#EXTM3U'):
         return content
 
-    lines     = text.split('\n')
-    new_lines = []
+    lines           = text.split('\n')
+    new_lines       = []
+    extra_headers_q = f'&extra_headers={quote(json.dumps(extra_headers), safe="")}' if extra_headers else ''
 
     for line in lines:
         stripped = line.strip()
@@ -176,6 +189,7 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
                         proxy_url += f'&user_agent={quote(user_agent, safe="")}'
                     if force_proxy:
                         proxy_url += '&force_proxy=1'
+                    proxy_url += extra_headers_q
                     return f'URI="{proxy_url}"'
 
                 # Segment ise doğrudan CDN
@@ -200,6 +214,7 @@ def rewrite_hls_manifest(content: bytes, base_url: str, referer: str = None, use
                     proxy_url += f'&user_agent={quote(user_agent, safe="")}'
                 if force_proxy:
                     proxy_url += '&force_proxy=1'
+                proxy_url += extra_headers_q
                 new_lines.append(proxy_url)
 
         else:
