@@ -29,11 +29,12 @@ async def load_links(request: Request, plugin: str = None, encoded_url: str = No
             subtitles = [sub.model_dump() for sub in link.subtitles]
 
         result.append({
-            "name"       : link.name,
-            "url"        : link.url,
-            "referer"    : link.referer or "",
-            "user_agent" : link.user_agent or "",
-            "subtitles"  : subtitles
+            "name"          : link.name,
+            "url"           : link.url,
+            "referer"       : link.referer or "",
+            "user_agent"    : link.user_agent or "",
+            "extra_headers" : link.extra_headers or {},
+            "subtitles"     : subtitles
         })
 
     return {**api_v1_global_message, "result": result}
