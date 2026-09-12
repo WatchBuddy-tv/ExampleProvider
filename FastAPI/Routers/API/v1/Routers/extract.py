@@ -1,20 +1,44 @@
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
-from FastAPI import Request, JSONResponse
-from .       import api_v1_router, api_v1_global_message
-from ..Libs  import extractor_manager
+from FastAPI      import Request, JSONResponse
+from .            import api_v1_router, api_v1_global_message
+from ..Libs       import extractor_manager
+from urllib.parse import urlparse
 import asyncio, time
 
 # Global safety guards
-_extraction_semaphore = asyncio.Semaphore(5)
-_inflight_extractions = {}  # URL -> Future
-_negative_cache       = {}  # URL -> (timestamp, error_msg)
-_NEG_CACHE_TTL        = 300  # 5 minutes
+_extraction_semaphores = {}  # domain -> Semaphore(5) - hoster başına, siteler birbirini bloklamasın
+_extraction_sem_lock   = asyncio.Lock()
+_inflight_extractions  = {}  # URL -> Future
+_negative_cache        = {}  # URL -> (timestamp, error_msg)
+_NEG_CACHE_TTL         = 300  # 5 minutes
+_NEG_CACHE_MAX_ENTRIES = 512
+
+async def _get_domain_semaphore(url: str) -> asyncio.Semaphore:
+    domain = urlparse(url).netloc
+    async with _extraction_sem_lock:
+        if domain not in _extraction_semaphores:
+            if len(_extraction_semaphores) >= 64:
+                _extraction_semaphores.pop(next(iter(_extraction_semaphores)), None)
+            _extraction_semaphores[domain] = asyncio.Semaphore(5)
+        return _extraction_semaphores[domain]
+
+def _prune_bounded_cache(cache: dict, max_entries: int = 512):
+    """Basit boyut sınırı: limit aşılırsa en eski kayıtları sil (FIFO, insertion-order dict)."""
+    now     = time.time()
+    expired = [k for k, (ts, _) in cache.items() if (now - ts) >= _NEG_CACHE_TTL]
+    for k in expired:
+        cache.pop(k, None)
+
+    overflow = len(cache) - max_entries
+    if overflow > 0:
+        for key in list(cache.keys())[:overflow]:
+            cache.pop(key, None)
 
 @api_v1_router.get("/extract")
 async def extract(request: Request, encoded_url: str = None, encoded_referer: str = None):
     if not encoded_url:
-        return JSONResponse(status_code=410, content={"error": f"{request.url.path}?_encoded_url=&_encoded_referer="})
+        return JSONResponse(status_code=410, content={"error" : f"{request.url.path}?_encoded_url=&_encoded_referer="})
 
     # Doğrudan medya dosyaları için bypass (m3u8, mp4 vb.)
     url_lower = encoded_url.lower()
@@ -37,7 +61,7 @@ async def extract(request: Request, encoded_url: str = None, encoded_referer: st
     if encoded_url in _negative_cache:
         ts, err = _negative_cache[encoded_url]
         if (now - ts) < _NEG_CACHE_TTL:
-            return JSONResponse(status_code=503, content={"error": f"URL is temporarily blocked: {err}"})
+            return JSONResponse(status_code=503, content={"error" : f"URL is temporarily blocked: {err}"})
         else:
             _negative_cache.pop(encoded_url)
 
@@ -49,22 +73,26 @@ async def extract(request: Request, encoded_url: str = None, encoded_referer: st
         extractor = extractor_manager.find_extractor(encoded_url)
         if not extractor:
             _negative_cache[encoded_url] = (time.time(), "Extractor not found")
-            return JSONResponse(status_code=404, content={"error": "Extractor not found."})
+            _prune_bounded_cache(_negative_cache, _NEG_CACHE_MAX_ENTRIES)
+            return JSONResponse(status_code=404, content={"error" : "Extractor not found."})
 
-        async with _extraction_semaphore:
+        sem = await _get_domain_semaphore(encoded_url)
+        async with sem:
             try:
                 # Add a reasonable timeout for the whole operation
                 result = await asyncio.wait_for(
                     extractor.extract(encoded_url, encoded_referer),
-                    timeout=15.0
+                    timeout = 15.0
                 )
-                return {**api_v1_global_message, "result": result}
+                return {**api_v1_global_message, "result" : result}
             except asyncio.TimeoutError:
                 _negative_cache[encoded_url] = (time.time(), "Timeout")
-                return JSONResponse(status_code=504, content={"error": "Extraction timed out."})
+                _prune_bounded_cache(_negative_cache, _NEG_CACHE_MAX_ENTRIES)
+                return JSONResponse(status_code=504, content={"error" : "Extraction timed out."})
             except Exception as e:
                 _negative_cache[encoded_url] = (time.time(), str(e))
-                return JSONResponse(status_code=500, content={"error": str(e)})
+                _prune_bounded_cache(_negative_cache, _NEG_CACHE_MAX_ENTRIES)
+                return JSONResponse(status_code=500, content={"error" : str(e)})
 
     # Create task and track it
     task = asyncio.create_task(_do_extract())

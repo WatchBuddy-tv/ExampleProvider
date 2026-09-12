@@ -21,7 +21,7 @@ class GenericSampleExtractor(ExtractorBase):
         # Base headers and cookies from CloudScraper are pre-loaded in self.httpx
         response = await self.httpx.get(
             url     = url,
-            headers = {"Referer": referer or self.main_url}
+            headers = {"Referer" : referer or self.main_url}
         )
         html = response.text
 

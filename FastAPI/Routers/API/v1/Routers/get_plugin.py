@@ -11,11 +11,11 @@ from urllib.parse import quote_plus
 async def get_plugin(request: Request, plugin: str = None):
     plugin_names = plugin_manager.get_plugin_names()
     if not plugin:
-        return JSONResponse(status_code=410, content={"error": f"{request.url.path}?plugin={choice(plugin_names)}"})
+        return JSONResponse(status_code=410, content={"error" : f"{request.url.path}?plugin={choice(plugin_names)}"})
 
     _plugin = plugin if plugin in plugin_names else None
     if not _plugin:
-        return JSONResponse(status_code=410, content={"error": f"{request.url.path}?plugin={_plugin or choice(plugin_names)}"})
+        return JSONResponse(status_code=410, content={"error" : f"{request.url.path}?plugin={_plugin or choice(plugin_names)}"})
 
     plugin = plugin_manager.select_plugin(_plugin)
 
@@ -32,4 +32,4 @@ async def get_plugin(request: Request, plugin: str = None):
         "main_page"   : main_page
     }
 
-    return {**api_v1_global_message, "result": result}
+    return {**api_v1_global_message, "result" : result}

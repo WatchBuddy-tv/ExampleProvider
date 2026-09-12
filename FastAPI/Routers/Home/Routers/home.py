@@ -12,4 +12,4 @@ async def home():
 @home_router.head("/health")
 async def health_check():
     """Health Check"""
-    return JSONResponse({"success": True, "status": "healthy"})
+    return JSONResponse({"success" : True, "status" : "healthy"})

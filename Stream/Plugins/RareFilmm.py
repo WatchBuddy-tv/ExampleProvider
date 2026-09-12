@@ -1,7 +1,6 @@
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 from KekikStream.Core import PluginBase, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractResult, HTMLHelper
-import asyncio
 
 class RareFilmm(PluginBase):
     """
@@ -179,8 +178,14 @@ class RareFilmm(PluginBase):
         if not tasks:
             return []
 
-        # Perform extractions in parallel for better performance
-        extracted_results = await asyncio.gather(*tasks)
+        async def _safe_extract(coro):
+            try:
+                return await coro
+            except Exception:
+                return None
+
+        # Perform extractions in parallel, bounded concurrency, one bad link can't fail the rest
+        extracted_results = await self.gather_with_limit([_safe_extract(t) for t in tasks], limit=5)
 
         links = []
         for res in extracted_results:

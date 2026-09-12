@@ -8,7 +8,7 @@ from ..Libs.ytdlp_service import ytdlp_extract_video_info
 @api_v1_router.get("/ytdlp-extract")
 async def ytdlp_extract(url: str = None):
     if not url:
-        return JSONResponse(status_code=400, content={"error": "url parameter required"})
+        return JSONResponse(status_code=400, content={"error" : "url parameter required"})
 
     # Extract video info with yt-dlp
     info = await ytdlp_extract_video_info(url)

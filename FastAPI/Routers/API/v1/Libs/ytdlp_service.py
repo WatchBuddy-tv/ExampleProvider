@@ -1,21 +1,23 @@
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
-from Stream import extractor_manager
-import asyncio, subprocess, json, time, os
+from .cache_utils import TTLCache
+from Stream       import extractor_manager
+import asyncio, subprocess, json, os
 
 # Singleton YTDLP extractor instance
+_ytdlp_extractor = None
 for extractor_cls in extractor_manager.extractors:
     instance = extractor_cls()
     if instance.name == "yt-dlp":
         _ytdlp_extractor = instance
         break
 
-_CACHE        : dict[str, dict]  = {}
-_CACHE_TS     : dict[str, float] = {}
-_NEG_CACHE_TS : dict[str, float] = {}
-_CACHE_LOCK                      = asyncio.Lock()
-_CACHE_TTL                       = int(os.getenv("YTDLP_CACHE_TTL", "600") or "600")
-_NEG_TTL                         = int(os.getenv("YTDLP_NEG_TTL", "60") or "60")
+_CACHE_TTL = int(os.getenv("YTDLP_CACHE_TTL", "600") or "600")
+_NEG_TTL   = int(os.getenv("YTDLP_NEG_TTL", "60") or "60")
+
+_cache     = TTLCache(ttl=_CACHE_TTL, max_entries=256)
+_neg_cache = TTLCache(ttl=_NEG_TTL, max_entries=256)
+_lock      = asyncio.Lock()
 
 async def ytdlp_extract_video_info(url: str, user_agent: str | None = None, referer: str | None = None):
     """
@@ -39,29 +41,24 @@ async def ytdlp_extract_video_info(url: str, user_agent: str | None = None, refe
     if not url or not (url.startswith("http://") or url.startswith("https://")):
         return None
 
-    # YTDLP extractor's optimized can_handle_url check
-    if not _ytdlp_extractor.can_handle_url(url):
+    if not _ytdlp_extractor or not _ytdlp_extractor.can_handle_url(url):
         return None
 
     cache_key = f"{url}|{user_agent or ''}|{referer or ''}"
-    now       = time.time()
-    async with _CACHE_LOCK:
-        ts = _CACHE_TS.get(cache_key)
-        if ts and (now - ts) < _CACHE_TTL:
-            return _CACHE.get(cache_key)
-        neg_ts = _NEG_CACHE_TS.get(cache_key)
-        if neg_ts and (now - neg_ts) < _NEG_TTL:
+    async with _lock:
+        cached = _cache.get(cache_key)
+        if cached is not None:
+            return cached
+        if _neg_cache.get(cache_key) is not None:
             return None
 
     # If URL is valid, extract full info
     info = await _extract_with_ytdlp(url, user_agent=user_agent, referer=referer)
-    async with _CACHE_LOCK:
+    async with _lock:
         if info:
-            _CACHE[cache_key] = info
-            _CACHE_TS[cache_key] = now
-            _NEG_CACHE_TS.pop(cache_key, None)
+            _cache.set(cache_key, info)
         else:
-            _NEG_CACHE_TS[cache_key] = now
+            _neg_cache.set(cache_key, True)
     return info
 
 async def _extract_with_ytdlp(url: str, user_agent: str | None = None, referer: str | None = None):
@@ -89,10 +86,16 @@ async def _extract_with_ytdlp(url: str, user_agent: str | None = None, referer: 
         )
 
         timeout_s = float(os.getenv("YTDLP_TIMEOUT", "5") or "5")
-        stdout, stderr = await asyncio.wait_for(
-            process.communicate(),
-            timeout=timeout_s
-        )
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout = timeout_s
+            )
+        except asyncio.TimeoutError:
+            # wait_for coroutine'i iptal eder ama subprocess çalışmaya devam eder → zombie process leak
+            process.kill()
+            await process.wait()
+            raise
 
         if process.returncode != 0:
             error_msg = stderr.decode() if stderr else "Unknown error"
@@ -126,7 +129,7 @@ async def _extract_with_ytdlp(url: str, user_agent: str | None = None, referer: 
             "format"       : video_format,
             "uploader"     : info.get("uploader", ""),
             "description"  : info.get("description", "")[:200] if info.get("description") else "",
-            "http_headers" : {k.lower(): v for k, v in info.get("http_headers", {}).items()}
+            "http_headers" : {k.lower() : v for k, v in info.get("http_headers", {}).items()}
         }
 
     except asyncio.TimeoutError:
