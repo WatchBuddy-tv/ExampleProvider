@@ -1,14 +1,18 @@
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
-from FastAPI import Request, JSONResponse
-from .       import api_v1_router, api_v1_global_message
-from ..Libs  import plugin_manager
+from FastAPI            import Request, JSONResponse
+from .                  import api_v1_router, api_v1_global_message
+from ..Libs             import plugin_manager
+from ..Libs.cache_utils import TTLCache, InflightDedup
 
 from random       import choice
 from urllib.parse import quote_plus
 import re
 import unicodedata
 import asyncio
+
+_cache = TTLCache(ttl=300, max_entries=256)  # 5 dk - arama sonuçları kısa sürede tekrar sorulabiliyor
+_dedup = InflightDedup()
 
 _TR_CHAR_MAP = str.maketrans({
     "ı" : "i",
@@ -75,30 +79,46 @@ def _similarity_score(title: str, query: str) -> int:
 async def search(request: Request, plugin: str = None, query: str = None):
     plugin_names = plugin_manager.get_plugin_names()
     if not plugin or not query:
-        return JSONResponse(status_code=410, content={"error": f"{request.url.path}?plugin={choice(plugin_names)}&query="})
+        return JSONResponse(status_code=410, content={"error" : f"{request.url.path}?plugin={choice(plugin_names)}&query="})
 
     _plugin = plugin if plugin in plugin_names else None
     if not _plugin:
-        return JSONResponse(status_code=410, content={"error": f"{request.url.path}?plugin={_plugin or choice(plugin_names)}&query="})
+        return JSONResponse(status_code=410, content={"error" : f"{request.url.path}?plugin={_plugin or choice(plugin_names)}&query="})
 
-    plugin = plugin_manager.select_plugin(_plugin)
-    try:
-        result = await asyncio.wait_for(plugin.search(query), timeout=3.0)
-    except asyncio.TimeoutError:
-        result = []
+    cache_key = f"{_plugin}|{query}"
+    cached    = _cache.get(cache_key)
+    if cached is not None:
+        return {**api_v1_global_message, "result" : cached}
 
-    result = sorted(
-        result,
-        key=lambda item: (
-            -_similarity_score(_extract_title(item), query),
-            _normalize_text(_extract_title(item))
+    def _rank(items):
+        return sorted(
+            items,
+            key = lambda item: (
+                -_similarity_score(_extract_title(item), query),
+                _normalize_text(_extract_title(item))
+            )
         )
-    )
 
-    for item in result:
-        if isinstance(item, dict):
-            item["url"] = quote_plus(str(item.get("url", "")))
-        else:
-            item.url = quote_plus(item.url)
+    async def _load():
+        plugin_inst = plugin_manager.select_plugin(_plugin)
+        try:
+            result = await asyncio.wait_for(plugin_inst.search(query), timeout=3.0)
+        except asyncio.TimeoutError:
+            result = []
 
-    return {**api_v1_global_message, "result": result}
+        # CPU-bound regex/unicode scoring - event loop'u bloklamasın diye thread'e devret
+        result = await asyncio.to_thread(_rank, result)
+
+        for item in result:
+            if isinstance(item, dict):
+                item["url"] = quote_plus(str(item.get("url", "")))
+            else:
+                item.url = quote_plus(item.url)
+
+        if result:
+            _cache.set(cache_key, result)
+
+        return result
+
+    result = await _dedup.run(cache_key, _load)
+    return {**api_v1_global_message, "result" : result}

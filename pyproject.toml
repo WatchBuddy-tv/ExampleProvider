@@ -13,7 +13,7 @@ dependencies    = [
     "PyYAML",
     "python-multipart",
     "python-dotenv",
-    "KekikStream>=3.6.7",
+    "KekikStream>=4.0.4",
     "yt-dlp[default,curl-cffi]",
 ]
 

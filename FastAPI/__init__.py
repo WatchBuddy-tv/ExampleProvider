@@ -62,6 +62,11 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    # Shutdown
+    with suppress(Exception):
+        from .Routers.Proxy.Libs.helpers import shared_client
+        await shared_client.aclose()
+
 app = FastAPI(title=PROJECT, lifespan=lifespan)
 
 # ! ----------------------------------------» Middlewares

@@ -25,7 +25,7 @@ class AniList(PluginBase):
 
     async def _query(self, query: str, variables: dict) -> dict:
         """Helper to send GraphQL queries"""
-        req = await self.httpx.post(self.API_URL, json={'query': query, 'variables': variables})
+        req = await self.httpx.post(self.API_URL, json={'query' : query, 'variables' : variables})
         return req.json().get('data', {}) if req.status_code == 200 else {}
 
     async def get_main_page(self, page: int, url: str, category: str) -> list[MainPageResult]:
@@ -41,7 +41,7 @@ class AniList(PluginBase):
           }
         }
         """
-        data = await self._query(query, {'page': page, 'sort': [url]})
+        data = await self._query(query, {'page' : page, 'sort' : [url]})
 
         return [
             MainPageResult(
@@ -66,7 +66,7 @@ class AniList(PluginBase):
           }
         }
         """
-        data = await self._query(query, {'search': query_str})
+        data = await self._query(query, {'search' : query_str})
 
         return [
             SearchResult(
@@ -102,7 +102,7 @@ class AniList(PluginBase):
           }
         }
         """
-        data = await self._query(query, {'id': int(url)})
+        data = await self._query(query, {'id' : int(url)})
         meta = data.get('Media', {})
 
         # Cast & Genres + Studios

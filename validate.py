@@ -16,16 +16,8 @@ from rich.live    import Live
 # Ensure current directory is in path and models are accessible
 sys.path.append(os.getcwd())
 
-from KekikStream.Core import (
-    PluginManager,
-    MainPageResult,
-    SearchResult,
-    MovieInfo,
-    SeriesInfo,
-    ExtractorManager,
-    ExtractResult
-)
-from FastAPI import PROXIES
+from KekikStream.Core import PluginManager, MainPageResult, SearchResult, MovieInfo, SeriesInfo, ExtractorManager, ExtractResult
+from FastAPI          import PROXIES
 
 # Premium Color Palette
 C_BRAND     = "#00FF88"  # WatchBuddy Green
@@ -99,52 +91,52 @@ class ProviderValidator:
         console.print(Align.center(Panel(table, title=f"[{C_HIGHLIGHT}]{icon} {title}[/]", border_style=C_MUTED, expand=False)))
 
     async def test_get_main_page(self, plugin) -> dict:
-        result = {"status": "❌", "message": "", "data": None}
+        result = {"status" : "❌", "message" : "", "data" : None}
         try:
             if not plugin.main_page:
-                return {"status": "⚠️", "message": "Metadata: Missing main_page dict"}
+                return {"status" : "⚠️", "message" : "Metadata: Missing main_page dict"}
 
             url, category = choice(list(plugin.main_page.items()))
             console.print(f"  [{C_MUTED}]Testing Protocol:[/] [bold {C_HIGHLIGHT}]{category}[/]")
             items = await plugin.get_main_page(1, url, category)
 
             if not items:
-                return {"status": "⚠️", "message": f"Discovery: Zero items in {category}"}
+                return {"status" : "⚠️", "message" : f"Discovery: Zero items in {category}"}
 
             self._display_data_list(f"Curated Discovery: {category}", items, MainPageResult, "✨")
-            result.update({"status": "✅", "message": f"Discovery: {len(items)} items", "data": choice(items)})
+            result.update({"status" : "✅", "message" : f"Discovery: {len(items)} items", "data" : choice(items)})
         except Exception as e:
             result["message"] = f"Discovery Error: {str(e)}"
         return result
 
     async def test_search(self, plugin, query: str = "A") -> dict:
-        result = {"status": "❌", "message": "", "data": None}
+        result = {"status" : "❌", "message" : "", "data" : None}
         try:
             items = await plugin.search(query)
             if not items:
                 items = await plugin.search("The") # Fallback
 
             if not items:
-                return {"status": "⚠️", "message": f"Search: No results for '{query}'"}
+                return {"status" : "⚠️", "message" : f"Search: No results for '{query}'"}
 
             self._display_data_list(f"Universal Search: '{query}'", items, SearchResult, "🔍")
-            result.update({"status": "✅", "message": f"Search: {len(items)} results", "data": choice(items)})
+            result.update({"status" : "✅", "message" : f"Search: {len(items)} results", "data" : choice(items)})
         except Exception as e:
             result["message"] = f"Search Error: {str(e)}"
         return result
 
     async def test_load_item(self, plugin, test_url: str) -> dict:
-        result = {"status": "❌", "message": "", "data": None}
+        result = {"status" : "❌", "message" : "", "data" : None}
         try:
             item = await plugin.load_item(test_url)
             if not item:
-                return {"status": "❌", "message": "Metadata: Empty response"}
+                return {"status" : "❌", "message" : "Metadata: Empty response"}
 
             # Schema Check
             model_cls = SeriesInfo if isinstance(item, SeriesInfo) else MovieInfo
             valid, msg = self._validate_schema(item, model_cls)
             if not valid:
-                return {"status": "❌", "message": f"Schema Violation: {msg}"}
+                return {"status" : "❌", "message" : f"Schema Violation: {msg}"}
 
             # Metadata Visual
             grid = Table.grid(expand=False, padding=(0, 2))
@@ -202,17 +194,17 @@ class ProviderValidator:
             else:
                 console.print(Align.center(metadata_panel))
 
-            result.update({"status": "✅", "message": "Metadata: OK", "data": item})
+            result.update({"status" : "✅", "message" : "Metadata: OK", "data" : item})
         except Exception as e:
             result["message"] = f"Metadata Error: {str(e)}"
         return result
 
     async def test_load_links(self, plugin, test_url: str) -> dict:
-        result = {"status": "❌", "message": "", "data": None}
+        result = {"status" : "❌", "message" : "", "data" : None}
         try:
             links = await plugin.load_links(test_url)
             if not links:
-                return {"status": "⚠️", "message": "Streams: No links found"}
+                return {"status" : "⚠️", "message" : "Streams: No links found"}
 
             table = Table(show_header=True, header_style=f"bold {C_INFO}", box=ROUNDED, border_style=C_MUTED, expand=False)
             table.add_column("Provider", style=C_SUCCESS)
@@ -229,7 +221,7 @@ class ProviderValidator:
                 table.add_row(link.name, fmt, s_icon, subs, link.url)
 
             console.print(Align.center(Panel(table, title=f"[{C_HIGHLIGHT}]🔌 Resolved Stream Sources[/]", border_style=C_MUTED, expand=False)))
-            result.update({"status": "✅", "message": f"Streams: {len(links)} sources"})
+            result.update({"status" : "✅", "message" : f"Streams: {len(links)} sources"})
         except Exception as e:
             result["message"] = f"Stream Error: {str(e)}"
         return result
@@ -241,7 +233,7 @@ class ProviderValidator:
             console.print(Align.center(f"[{C_ERR}]Critical Error: Plugin '{plugin_name}' failed to load![/]"))
             return
 
-        report = {"name": plugin_name, "steps": {}}
+        report = {"name" : plugin_name, "steps" : {}}
 
         test_flow = [
             ("main",   "get_main_page", self.test_get_main_page(plugin)),

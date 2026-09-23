@@ -8,4 +8,4 @@ from ..Libs  import plugin_manager
 async def get_plugin_names(request: Request):
     plugin_names = plugin_manager.get_plugin_names()
 
-    return {**api_v1_global_message, "result": plugin_names}
+    return {**api_v1_global_message, "result" : plugin_names}
