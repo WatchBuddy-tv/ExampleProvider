@@ -3,7 +3,7 @@ name            = "ExampleProvider"
 version         = "0.1.0"
 requires-python = ">=3.14"
 dependencies    = [
-    "Kekik",
+    "Kekik>=2.0.2",
     "httpx[http2]",
     "fastapi",
     "uvicorn",
@@ -13,7 +13,7 @@ dependencies    = [
     "PyYAML",
     "python-multipart",
     "python-dotenv",
-    "KekikStream>=4.0.4",
+    "KekikStream>=4.1.4",
     "yt-dlp[default,curl-cffi]",
 ]
 
